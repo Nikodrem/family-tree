@@ -116,7 +116,6 @@
     }
     .tree-area:active { cursor: grabbing; }
     .tree-area svg { width: 100%; height: 100%; }
-
     .modal-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -173,7 +172,6 @@
       cursor: pointer;
       line-height: 1;
     }
-
     .relation-dialog {
       background: rgba(255, 255, 255, 0.9);
       backdrop-filter: blur(20px);
@@ -184,7 +182,6 @@
     }
     .relation-dialog h3 { margin-bottom: 12px; font-weight: 400; color: #2c3e50; }
     .relation-dialog button { margin: 6px; }
-
     .node-card { cursor: pointer; transition: all 0.2s; }
     .node-card:hover { filter: brightness(1.05); transform: scale(1.02); }
     .port {
@@ -194,7 +191,6 @@
       stroke-width: 2;
     }
     .port:hover { fill: rgba(100, 149, 237, 1); }
-
     .empty-tree-message {
       position: absolute;
       top: 50%; left: 50%;
@@ -236,7 +232,6 @@
       outline: none;
     }
     .password-dialog input:last-of-type { margin-bottom: 20px; }
-
     @media (max-width: 700px) {
       .edit-panel { width: 95vw; }
       .header-top h1 { font-size: 1.2rem; }
@@ -264,7 +259,6 @@
       <span style="flex:1;"></span>
     </div>
   </header>
-
   <div class="tree-area" id="treeContainer"></div>
 
   <div class="modal-overlay" id="editModal">
@@ -324,10 +318,9 @@
   (function() {
     const STORAGE_KEY = 'encryptedFamilyTree';
     let treeData = { persons: [], relationships: [] };
-    let encryptionKey = false;
     let passwordSet = false;
     let currentLogin = '';
-    let currentPassword = '';   // храним пароль
+    let currentPassword = '';
     let focusPersonId = null;
 
     const treeContainer = document.getElementById('treeContainer');
@@ -358,7 +351,7 @@
     }
     passwordInput.addEventListener('input', updateSubmitButtonState);
 
-    // Шифрование
+    // ---------- Шифрование ----------
     async function deriveKey(login, password, salt = null) {
       if (!salt) salt = crypto.getRandomValues(new Uint8Array(16));
       const combined = login + ':' + password;
@@ -390,18 +383,17 @@
       return JSON.parse(new TextDecoder().decode(decrypted));
     }
 
-    async function saveToStorage() {
-      if (!encryptionKey || !currentLogin || !currentPassword) {
-        console.warn('Не могу сохранить: отсутствует ключ или пароль');
-        return;
-      }
-      try {
-        const encrypted = await encryptData(treeData, currentLogin, currentPassword);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(encrypted));
-      } catch (e) {
-        console.error('Ошибка сохранения:', e);
-        alert('Ошибка сохранения данных');
-      }
+    function saveToStorage() {
+      if (!currentLogin || !currentPassword) return;
+      // Запускаем асинхронно, ошибки не должны ломать интерфейс
+      encryptData(treeData, currentLogin, currentPassword)
+        .then(encrypted => {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(encrypted));
+        })
+        .catch(err => {
+          console.error('Ошибка сохранения:', err);
+          alert('Не удалось сохранить данные. Возможно, проблемы с шифрованием.');
+        });
     }
 
     async function loadFromStorage(login, password) {
@@ -410,7 +402,7 @@
       return await decryptData(JSON.parse(raw), login, password);
     }
 
-    // Вход
+    // ---------- Вход ----------
     async function checkStorageAndPrompt() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -439,9 +431,8 @@
           treeData = { persons: [], relationships: [] };
         }
         currentLogin = login;
-        currentPassword = pass;   // сохраняем пароль
+        currentPassword = pass;
         passwordSet = true;
-        encryptionKey = true;
         passwordOverlay.style.display = 'none';
         renderAll();
       } catch (e) {
@@ -451,7 +442,6 @@
 
     function lockApp() {
       passwordSet = false;
-      encryptionKey = false;
       currentLogin = '';
       currentPassword = '';
       treeData = { persons: [], relationships: [] };
@@ -464,7 +454,7 @@
       closeEditModal();
     }
 
-    // Рендеринг
+    // ---------- Рендеринг ----------
     function renderAll() {
       if (!passwordSet) return;
       treeContainer.innerHTML = '';
@@ -679,6 +669,7 @@
         .map(r => r.person1 === id ? r.person2 : r.person1);
     }
 
+    // ---------- Редактирование человека (НОВАЯ НАДЁЖНАЯ МЕХАНИКА) ----------
     function openEditModal(personId = null) {
       if (personId) {
         const person = treeData.persons.find(p => p.id === personId);
@@ -719,8 +710,8 @@
       }
     });
 
-    async function savePerson() {
-      console.log('savePerson called');
+    // НОВАЯ функция сохранения — синхронное обновление данных, модалка закрывается сразу
+    function savePerson() {
       const id = personIdInput.value;
       const data = {
         firstName: firstNameInput.value.trim(),
@@ -731,22 +722,22 @@
         notes: notesInput.value.trim(),
         photo: photoPreview.querySelector('img')?.src || ''
       };
-      console.log('data:', data);
-      if (!data.firstName && !data.lastName) {
-        alert('Введите хотя бы имя или фамилию');
-        return;
-      }
+
       if (id) {
         const idx = treeData.persons.findIndex(p => p.id === id);
-        if (idx !== -1) treeData.persons[idx] = { ...treeData.persons[idx], ...data };
+        if (idx !== -1) {
+          treeData.persons[idx] = { ...treeData.persons[idx], ...data };
+        }
       } else {
         const newId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
         treeData.persons.push({ id: newId, ...data });
       }
-      console.log('treeData after save:', treeData);
-      await saveToStorage();
+
+      // Закрываем окно и перерисовываем дерево немедленно
       closeEditModal();
       renderAll();
+      // Фоновое сохранение
+      saveToStorage();
     }
 
     async function deletePerson() {
@@ -756,11 +747,12 @@
       treeData.persons = treeData.persons.filter(p => p.id !== id);
       treeData.relationships = treeData.relationships.filter(r => r.person1 !== id && r.person2 !== id);
       if (focusPersonId === id) focusPersonId = null;
-      await saveToStorage();
+      saveToStorage();
       closeEditModal();
       renderAll();
     }
 
+    // Связи drag-and-drop
     function showRelationDialog(sourceId, targetId) {
       const source = treeData.persons.find(p => p.id === sourceId);
       const target = treeData.persons.find(p => p.id === targetId);
@@ -778,7 +770,7 @@
         const btn = document.createElement('button');
         btn.className = 'glass-btn';
         btn.textContent = opt.text;
-        btn.onclick = async () => {
+        btn.onclick = () => {
           if (opt.type === 'parent') {
             if (opt.dir === 1) addRelation(sourceId, targetId, 'parent');
             else addRelation(targetId, sourceId, 'parent');
@@ -797,7 +789,7 @@
       dragSource = dragTarget = null;
     }
 
-    async function addRelation(person1, person2, type) {
+    function addRelation(person1, person2, type) {
       if (person1 === person2) return;
       const exists = treeData.relationships.some(r =>
         (r.type === type && r.person1 === person1 && r.person2 === person2) ||
@@ -805,11 +797,11 @@
       );
       if (exists) return alert('Такая связь уже существует');
       treeData.relationships.push({ type, person1, person2 });
-      await saveToStorage();
+      saveToStorage();
       renderAll();
     }
 
-    // Обработчики
+    // ---------- Обработчики ----------
     document.getElementById('savePersonBtn').addEventListener('click', savePerson);
     document.getElementById('deletePersonBtn').addEventListener('click', deletePerson);
     document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
