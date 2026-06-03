@@ -212,8 +212,11 @@
     }
     .relation-dialog h3 { margin-bottom: 12px; font-weight: 400; color: #2c3e50; }
     .relation-dialog button { margin: 6px; }
-    .node-card { cursor: pointer; transition: all 0.2s; }
-    .node-card:hover { filter: brightness(1.05); transform: scale(1.02); }
+    .node-card {
+      cursor: pointer;
+      transition: filter 0.2s; /* убран transform, вызывавший смещение */
+    }
+    .node-card:hover { filter: brightness(1.05); }
     .port {
       cursor: crosshair;
       fill: rgba(100, 149, 237, 0.7);
@@ -405,7 +408,7 @@
     }
     passwordInput.addEventListener('input', updateSubmitButtonState);
 
-    // Шифрование
+    // ---------- Шифрование ----------
     async function deriveKey(login, password, salt = null) {
       if (!salt) salt = crypto.getRandomValues(new Uint8Array(16));
       const combined = login + ':' + password;
@@ -436,7 +439,7 @@
         .catch(e => console.error('Ошибка сохранения', e));
     }
 
-    // Вход
+    // ---------- Вход ----------
     async function checkStorageAndPrompt() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -606,7 +609,7 @@
           openDetailModal(person.id);
         });
 
-        // Порты с отключением зума при перетаскивании
+        // Порты с надёжным отключением зума
         const portUp = card.append('circle')
           .attr('cx', cardWidth/2).attr('cy', 0).attr('r', 8).attr('class', 'port')
           .attr('data-person-id', person.id);
@@ -616,17 +619,15 @@
 
         const dragHandler = d3.drag()
           .on('start', function(event) {
-            // Отключаем зум на время перетаскивания
+            // Полностью отключаем зум, чтобы избежать конфликта
             svg.on('.zoom', null);
             window.dragSource = person.id;
             const portCy = +d3.select(this).attr('cy');
             const yStart = (portCy === 0) ? pos.y - cardHeight/2 : pos.y + cardHeight/2;
             gMain.append('line')
               .attr('id', 'dragLine')
-              .attr('x1', pos.x)
-              .attr('y1', yStart)
-              .attr('x2', pos.x)
-              .attr('y2', yStart)
+              .attr('x1', pos.x).attr('y1', yStart)
+              .attr('x2', pos.x).attr('y2', yStart)
               .attr('stroke', '#ff9f43').attr('stroke-width', 2)
               .attr('stroke-dasharray', '5,3');
           })
@@ -640,9 +641,8 @@
           .on('end', function(event) {
             const line = gMain.select('#dragLine');
             if (!line.empty()) line.remove();
-            // Включаем зум обратно
+            // Возвращаем зум после завершения перетаскивания
             svg.call(zoomBehavior);
-            const coords = d3.pointer(event, gMain.node());
             const targetEl = document.elementFromPoint(event.sourceEvent.clientX, event.sourceEvent.clientY);
             const targetPort = targetEl?.closest('.port');
             if (targetPort && window.dragSource) {
