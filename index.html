@@ -192,26 +192,28 @@
       stroke-width: 2;
     }
     .port:hover { fill: rgba(100, 149, 237, 1); }
-    .action-btn-group {
-      cursor: default;
+
+    /* Иконки действий внутри карточки */
+    .action-icons {
+      visibility: hidden;
     }
-    .action-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px; height: 36px;
-      background: rgba(255,255,255,0.7);
-      backdrop-filter: blur(5px);
-      border: 1px solid rgba(255,255,255,0.8);
-      border-radius: 12px;
+    .action-icon-bg {
+      fill: rgba(255,255,255,0.7);
+      stroke: rgba(0,0,0,0.08);
+      stroke-width: 1;
+      rx: 8;
+    }
+    .action-icon-text {
+      font-size: 14px;
+      font-family: 'Segoe UI', 'Font Awesome 6 Free';
+      font-weight: 900;
+      fill: #2c3e50;
+      text-anchor: middle;
+      dominant-baseline: central;
       cursor: pointer;
-      transition: all 0.2s;
-      color: #2c3e50;
-      font-size: 1rem;
     }
-    .action-btn:hover { background: rgba(255,255,255,0.9); }
-    .action-btn.delete { background: rgba(220,80,80,0.15); color: #c0392b; }
-    .action-btn.delete:hover { background: rgba(220,80,80,0.3); }
+    .action-icon-text.delete { fill: #c0392b; }
+
     .empty-tree-message {
       position: absolute;
       top: 50%; left: 50%;
@@ -365,7 +367,6 @@
     let passwordSet = false, currentLogin = '', currentPassword = '';
     let nodePositions = {};
     let selectedPersonId = null;
-    let actionButtonsGroup = null;
 
     const treeContainer = document.getElementById('treeContainer');
     const editModal = document.getElementById('editModal');
@@ -619,10 +620,12 @@
         .attr('fill', 'url(#dotPattern)');
 
       const edgesLayer = gMain.append('g');
-      const drawEdges = () => {
+      // Функция для перерисовки всех линий
+      function redrawEdges() {
         edgesLayer.selectAll('*').remove();
         treeData.relationships.forEach(rel => {
-          const s = nodePositions[rel.person1], t = nodePositions[rel.person2];
+          const s = nodePositions[rel.person1];
+          const t = nodePositions[rel.person2];
           if (!s || !t) return;
           const x1 = s.x, y1 = rel.type === 'parent' ? s.y + 30 : s.y;
           const x2 = t.x, y2 = rel.type === 'parent' ? t.y - 30 : t.y;
@@ -634,46 +637,10 @@
             .attr('stroke-dasharray', rel.type === 'spouse' ? '6,4' : 'none')
             .attr('marker-end', rel.type === 'parent' ? 'url(#arrowhead)' : '');
         });
-      };
-      drawEdges();
+      }
+      redrawEdges();
 
       const nodesLayer = gMain.append('g');
-      // Группа для кнопок действий (изначально скрыта)
-      actionButtonsGroup = gMain.append('g')
-        .attr('id', 'actionButtons')
-        .style('visibility', 'hidden');
-
-      // Фон для кнопок
-      actionButtonsGroup.append('rect')
-        .attr('width', 80)
-        .attr('height', 40)
-        .attr('rx', 12)
-        .attr('fill', 'rgba(255,255,255,0.6)')
-        .attr('stroke', 'rgba(255,255,255,0.8)')
-        .attr('stroke-width', 1);
-
-      // Кнопка "Редактировать"
-      actionButtonsGroup.append('foreignObject')
-        .attr('x', 8).attr('y', 5)
-        .attr('width', 30).attr('height', 30)
-        .append('xhtml:div')
-        .attr('class', 'action-btn')
-        .html('<i class="fas fa-pencil-alt"></i>')
-        .on('click', () => {
-          if (selectedPersonId) openEditModal(selectedPersonId);
-        });
-
-      // Кнопка "Удалить"
-      actionButtonsGroup.append('foreignObject')
-        .attr('x', 44).attr('y', 5)
-        .attr('width', 30).attr('height', 30)
-        .append('xhtml:div')
-        .attr('class', 'action-btn delete')
-        .html('<i class="fas fa-trash-alt"></i>')
-        .on('click', () => {
-          if (selectedPersonId) deleteSelectedPerson();
-        });
-
       treeData.persons.forEach(person => {
         const pos = nodePositions[person.id];
         if (!pos) return;
@@ -699,22 +666,46 @@
         }
 
         card.append('text')
-          .attr('x', person.photo ? 40 : 12)
-          .attr('y', 24)
-          .attr('fill', '#2c3e50')
-          .attr('font-size', '12px')
-          .attr('font-weight', '600')
+          .attr('x', person.photo ? 40 : 12).attr('y', 24)
+          .attr('fill', '#2c3e50').attr('font-size', '12px').attr('font-weight', '600')
           .text(`${person.firstName || '?'} ${person.lastName || ''}`.trim());
         card.append('text')
-          .attr('x', person.photo ? 40 : 12)
-          .attr('y', 42)
-          .attr('fill', '#7f8c8d')
-          .attr('font-size', '10px')
+          .attr('x', person.photo ? 40 : 12).attr('y', 42)
+          .attr('fill', '#7f8c8d').attr('font-size', '10px')
           .text(getDisplayRole(person));
+
+        // Кнопки действий (изначально скрыты)
+        const actionGroup = card.append('g')
+          .attr('class', 'action-icons')
+          .attr('transform', `translate(${cardWidth + 8}, ${cardHeight/2 - 18})`);
+
+        // Фон для кнопок
+        actionGroup.append('rect')
+          .attr('width', 80).attr('height', 36).attr('rx', 8)
+          .attr('fill', 'rgba(255,255,255,0.7)')
+          .attr('stroke', 'rgba(0,0,0,0.08)');
+
+        // Кнопка редактирования
+        actionGroup.append('text')
+          .attr('x', 20).attr('y', 18)
+          .attr('class', 'action-icon-text')
+          .text('\uf044') // иконка карандаша
+          .style('font-family', 'Font Awesome 6 Free')
+          .style('font-weight', '900')
+          .on('click', () => { if (selectedPersonId === person.id) openEditModal(person.id); });
+
+        // Кнопка удаления
+        actionGroup.append('text')
+          .attr('x', 60).attr('y', 18)
+          .attr('class', 'action-icon-text delete')
+          .text('\uf2ed') // иконка корзины
+          .style('font-family', 'Font Awesome 6 Free')
+          .style('font-weight', '900')
+          .on('click', () => { if (selectedPersonId === person.id) deleteSelectedPerson(); });
 
         card.on('click', function(event) {
           event.stopPropagation();
-          selectPerson(person.id, pos);
+          selectPerson(person.id);
         });
 
         // Порты
@@ -767,7 +758,7 @@
         portUp.call(portDrag);
         portDown.call(portDrag);
 
-        // Перетаскивание самой карточки
+        // Перетаскивание самой карточки с обновлением линий в реальном времени
         const cardDrag = d3.drag()
           .on('start', function(event) {
             svg.on('.zoom', null);
@@ -776,18 +767,24 @@
           .on('drag', function(event) {
             window.draggedCard.moved = true;
             const coords = d3.pointer(event, gMain.node());
-            card.attr('transform', `translate(${coords[0] - cardWidth/2}, ${coords[1] - cardHeight/2})`);
+            const newX = coords[0] - cardWidth/2;
+            const newY = coords[1] - cardHeight/2;
+            card.attr('transform', `translate(${newX}, ${newY})`);
+            // Обновляем позицию в реальном времени
+            const centerX = coords[0];
+            const centerY = coords[1];
+            nodePositions[person.id] = { x: centerX, y: centerY };
+            redrawEdges(); // перерисовываем линии сразу
           })
           .on('end', function(event) {
             svg.call(zoomBehavior);
             const dc = window.draggedCard;
             if (!dc) return;
             if (dc.moved) {
-              nodePositions[dc.id] = { x: dc.startX + (event.x - dc.startX), y: dc.startY + (event.y - dc.startY) };
+              // Финальное сохранение позиции
               saveNodePositionsToData();
-              drawEdges();
             } else {
-              selectPerson(dc.id, nodePositions[dc.id]);
+              selectPerson(dc.id);
             }
             window.draggedCard = null;
           });
@@ -805,27 +802,38 @@
       svg.call(zoomBehavior.transform, d3.zoomIdentity.translate(width/2, height/2).scale(scale).translate(-centerX, -centerY));
     }
 
-    function selectPerson(personId, pos) {
+    function selectPerson(personId) {
+      // Снять выделение со всех
       d3.selectAll('.node-card').classed('selected', false);
+      d3.selectAll('.action-icons').style('visibility', 'hidden');
       if (selectedPersonId === personId) {
-        clearSelection();
+        selectedPersonId = null;
         return;
       }
       selectedPersonId = personId;
+      // Найти карточку и выделить её
       d3.selectAll('.node-card').each(function() {
-        const id = d3.select(this).datum();
-        if (id === personId) d3.select(this).classed('selected', true);
+        // Здесь мы не можем легко получить id, поэтому используем другой способ:
+        // При рендеринге мы должны были запомнить id в datum.
+        // Но мы не привязали данные. Сделаем привязку через data.
       });
-      if (actionButtonsGroup) {
-        actionButtonsGroup.attr('transform', `translate(${pos.x + 80}, ${pos.y - 20})`);
-        actionButtonsGroup.style('visibility', 'visible');
-      }
+      // Поскольку мы не использовали data binding, проще найти по атрибуту или перебрать все группы.
+      // Мы можем при рендеринге записывать id в свойство элемента, но проще сейчас заново установить класс selected на нужной карточке.
+      // У нас есть ссылка на card? Нет, но мы можем заново пробежаться по всем node-card и сравнить их с id человека по какому-то признаку.
+      // Проще всего: сохранить ссылку на card при создании, но это усложнит. Пока используем поиск по data-person-id порта.
+      // Но можно и так: выделим карточку, у которой любой потомок имеет атрибут data-person-id = personId.
+      const cardSelection = d3.selectAll('.node-card').filter(function() {
+        return d3.select(this).select(`[data-person-id="${personId}"]`).size() > 0;
+      });
+      cardSelection.classed('selected', true);
+      // Показать action-icons внутри этой карточки
+      cardSelection.select('.action-icons').style('visibility', 'visible');
     }
 
     function clearSelection() {
       selectedPersonId = null;
       d3.selectAll('.node-card').classed('selected', false);
-      if (actionButtonsGroup) actionButtonsGroup.style('visibility', 'hidden');
+      d3.selectAll('.action-icons').style('visibility', 'hidden');
     }
 
     function deleteSelectedPerson() {
@@ -970,13 +978,13 @@
       const target = treeData.persons.find(p => p.id === targetId);
       if (!source || !target) return;
 
-      document.getElementById('relationTitle').textContent = `Связь: ${source.firstName || '?'} ↔ ${target.firstName || '?'}`;
+      document.getElementById('relationTitle').textContent = `Связь: ${source.firstName || '?'} → ${target.firstName || '?'}`;
       const div = document.getElementById('relationButtons');
       div.innerHTML = '';
 
       const options = [
-        { text: `${source.firstName || '?'} — родитель, ${target.firstName || '?'} — ребёнок`, type: 'parent', dir: 1 },
-        { text: `${target.firstName || '?'} — родитель, ${source.firstName || '?'} — ребёнок`, type: 'parent', dir: 2 },
+        { text: `${source.firstName || '?'} родитель → ${target.firstName || '?'} ребёнок`, type: 'parent', dir: 1 },
+        { text: `${target.firstName || '?'} родитель → ${source.firstName || '?'} ребёнок`, type: 'parent', dir: 2 },
         { text: 'Супруги', type: 'spouse', dir: 0 }
       ];
       options.forEach(opt => {
