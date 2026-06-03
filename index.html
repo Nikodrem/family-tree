@@ -78,17 +78,18 @@
     .node-card.selected rect { stroke: #6495ED; stroke-width: 3; }
     .port { cursor: crosshair; fill: rgba(100,149,237,0.7); stroke: white; stroke-width: 2; }
     .port:hover { fill: rgba(100,149,237,1); }
-    /* Кнопки действий внутри карточки */
+
+    /* Кнопки действий */
     .action-icons { visibility: hidden; pointer-events: all; }
-    .action-icons foreignObject { overflow: visible; pointer-events: all; }
     .action-icon-btn {
       background: rgba(255,255,255,0.7); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.8);
       border-radius: 10px; padding: 6px 10px; color: #2c3e50; font-size: 14px; cursor: pointer;
-      display: inline-flex; align-items: center; gap: 4px; transition: 0.2s; pointer-events: all; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 4px; transition: 0.2s; pointer-events: all;
     }
     .action-icon-btn:hover { background: rgba(255,255,255,0.9); }
     .action-icon-btn.delete { background: rgba(220,80,80,0.15); color: #c0392b; }
     .action-icon-btn.delete:hover { background: rgba(220,80,80,0.3); }
+
     .empty-tree-message { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 1.2rem; color: rgba(44,62,80,0.5); pointer-events: none; text-align: center; }
     .password-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.3);
@@ -449,18 +450,33 @@
       function redrawEdges() {
         edgesLayer.selectAll('*').remove();
         treeData.relationships.forEach(rel => {
-          const s = nodePositions[rel.person1];
-          const t = nodePositions[rel.person2];
-          if (!s || !t) return;
-          const x1 = s.x, y1 = rel.type === 'parent' ? s.y + 30 : s.y;
-          const x2 = t.x, y2 = rel.type === 'parent' ? t.y - 30 : t.y;
-          edgesLayer.append('line')
-            .attr('x1', x1).attr('y1', y1)
-            .attr('x2', x2).attr('y2', y2)
-            .attr('stroke', rel.type === 'spouse' ? '#ff9f43' : '#8395a7')
-            .attr('stroke-width', 2)
-            .attr('stroke-dasharray', rel.type === 'spouse' ? '6,4' : 'none')
-            .attr('marker-end', rel.type === 'parent' ? 'url(#arrowhead)' : '');
+          const parentPos = nodePositions[rel.person1];
+          const childPos = nodePositions[rel.person2];
+          if (!parentPos || !childPos) return;
+          if (rel.type === 'parent') {
+            // Линия от нижнего порта родителя к верхнему порту ребёнка
+            const x1 = parentPos.x;
+            const y1 = parentPos.y + 30;
+            const x2 = childPos.x;
+            const y2 = childPos.y - 30;
+            edgesLayer.append('line')
+              .attr('x1', x1).attr('y1', y1)
+              .attr('x2', x2).attr('y2', y2)
+              .attr('stroke', '#8395a7')
+              .attr('stroke-width', 2)
+              .attr('marker-end', 'url(#arrowhead)');
+          } else { // spouse
+            const x1 = parentPos.x;
+            const y1 = parentPos.y;
+            const x2 = childPos.x;
+            const y2 = childPos.y;
+            edgesLayer.append('line')
+              .attr('x1', x1).attr('y1', y1)
+              .attr('x2', x2).attr('y2', y2)
+              .attr('stroke', '#ff9f43')
+              .attr('stroke-width', 2)
+              .attr('stroke-dasharray', '6,4');
+          }
         });
       }
       redrawEdges();
@@ -499,35 +515,42 @@
           .attr('fill', '#7f8c8d').attr('font-size', '10px')
           .text(getDisplayRole(person));
 
-        // Кнопки действий
+        // Кнопки действий (появляются при выделении)
         const actionGroup = card.append('g')
           .attr('class', 'action-icons')
           .attr('transform', `translate(${cardWidth + 8}, ${cardHeight/2 - 15})`);
 
         const fo = actionGroup.append('foreignObject')
-          .attr('width', 80)
+          .attr('width', 90)
           .attr('height', 30)
-          .attr('pointer-events', 'all');
+          .attr('pointer-events', 'all')
+          .style('overflow', 'visible');
 
         const div = fo.append('xhtml:div')
           .style('display', 'flex')
-          .style('gap', '6px')
-          .style('pointer-events', 'all');
+          .style('gap', '8px')
+          .style('pointer-events', 'all')
+          .style('align-items', 'center')
+          .style('justify-content', 'center')
+          .style('width', '100%');
 
         div.append('button')
           .attr('class', 'action-icon-btn')
           .html('<i class="fas fa-pencil-alt"></i>')
-          .on('click', () => {
+          .on('click', (event) => {
+            event.stopPropagation();
             if (selectedPersonId === person.id) openEditModal(person.id);
           });
 
         div.append('button')
           .attr('class', 'action-icon-btn delete')
           .html('<i class="fas fa-trash-alt"></i>')
-          .on('click', () => {
+          .on('click', (event) => {
+            event.stopPropagation();
             if (selectedPersonId === person.id) deleteSelectedPerson();
           });
 
+        // Клик по карточке для выделения
         card.on('click', function(event) {
           event.stopPropagation();
           selectPerson(person.id);
@@ -583,7 +606,7 @@
         portUp.call(portDrag);
         portDown.call(portDrag);
 
-        // Перетаскивание карточки
+        // Перетаскивание карточки (с обновлением связей)
         const cardDrag = d3.drag()
           .on('start', function(event) {
             svg.on('.zoom', null);
