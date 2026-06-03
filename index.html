@@ -4,12 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Семейное древо — Glass Roots</title>
-  <!-- Подключаем библиотеки через CDN -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* === ОСНОВНЫЕ СТИЛИ В СТИЛЕ GLASSMORPHISM === */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -20,7 +18,6 @@
       align-items: center;
       overflow: hidden;
     }
-    /* Основное стеклянное окно приложения */
     .app-container {
       width: 100vw;
       height: 100vh;
@@ -34,7 +31,6 @@
       overflow: hidden;
       position: relative;
     }
-    /* Шапка */
     .glass-header {
       background: rgba(255, 255, 255, 0.4);
       backdrop-filter: blur(10px);
@@ -44,18 +40,22 @@
       justify-content: space-between;
       border-bottom: 1px solid rgba(255, 255, 255, 0.5);
       flex-shrink: 0;
+      flex-wrap: wrap;
+      gap: 8px;
     }
     .glass-header h1 {
       font-weight: 300;
       font-size: 1.8rem;
       color: #2c3e50;
       letter-spacing: 1px;
+      white-space: nowrap;
     }
     .header-actions {
       display: flex;
-      gap: 10px;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
     }
-    /* Кнопки в стиле жидкого стекла */
     .glass-btn {
       background: rgba(255, 255, 255, 0.5);
       backdrop-filter: blur(10px);
@@ -79,11 +79,11 @@
     }
     .glass-btn i { font-size: 1rem; }
     .glass-btn.primary {
-      background: rgba(100, 149, 237, 0.7);
+      background: rgba(100, 149, 237, 0.8);
       border-color: rgba(255, 255, 255, 0.9);
       color: white;
+      font-weight: 600;
     }
-    /* Поле поиска */
     .search-box {
       background: rgba(255, 255, 255, 0.4);
       backdrop-filter: blur(10px);
@@ -94,13 +94,8 @@
       font-size: 0.95rem;
       width: 200px;
       outline: none;
-      transition: all 0.3s;
     }
     .search-box::placeholder { color: #7f8c8d; }
-    .search-box:focus {
-      background: rgba(255, 255, 255, 0.7);
-    }
-    /* Основная область дерева */
     .tree-area {
       flex: 1;
       position: relative;
@@ -109,11 +104,7 @@
       cursor: grab;
     }
     .tree-area:active { cursor: grabbing; }
-    .tree-area svg {
-      width: 100%;
-      height: 100%;
-    }
-    /* Панель редактирования (выезжающая) */
+    .tree-area svg { width: 100%; height: 100%; }
     .edit-panel {
       position: absolute;
       top: 20px;
@@ -122,7 +113,6 @@
       max-height: calc(100vh - 120px);
       background: rgba(255, 255, 255, 0.7);
       backdrop-filter: blur(25px);
-      -webkit-backdrop-filter: blur(25px);
       border: 1px solid rgba(255, 255, 255, 0.5);
       border-radius: 24px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
@@ -133,19 +123,8 @@
       z-index: 10;
     }
     .edit-panel.active { transform: translateX(0); }
-    .edit-panel h3 {
-      margin-bottom: 16px;
-      font-weight: 400;
-      color: #2c3e50;
-    }
-    .edit-panel label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 0.8rem;
-      color: #7f8c8d;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+    .edit-panel h3 { margin-bottom: 16px; font-weight: 400; color: #2c3e50; }
+    .edit-panel label { display: block; margin-bottom: 6px; font-size: 0.8rem; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; }
     .edit-panel input, .edit-panel textarea, .edit-panel select {
       width: 100%;
       background: rgba(255, 255, 255, 0.6);
@@ -160,12 +139,8 @@
     }
     .edit-panel input[type="file"] { padding: 6px; }
     .edit-panel textarea { min-height: 60px; }
-    .edit-panel .row {
-      display: flex;
-      gap: 10px;
-    }
+    .edit-panel .row { display: flex; gap: 10px; }
     .edit-panel .row > * { flex: 1; }
-    /* Окно пароля (оверлей) */
     .password-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -175,7 +150,6 @@
       justify-content: center;
       align-items: center;
       z-index: 20;
-      transition: opacity 0.3s;
     }
     .password-dialog {
       background: rgba(255, 255, 255, 0.8);
@@ -198,15 +172,8 @@
       font-size: 1rem;
       outline: none;
     }
-    .node-card {
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .node-card:hover {
-      filter: brightness(1.05);
-      transform: scale(1.02);
-    }
-    /* Адаптив */
+    .node-card { cursor: pointer; transition: all 0.2s; }
+    .node-card:hover { filter: brightness(1.05); transform: scale(1.02); }
     @media (max-width: 700px) {
       .edit-panel { width: 280px; }
       .glass-header h1 { font-size: 1.2rem; }
@@ -216,19 +183,16 @@
 </head>
 <body>
 <div class="app-container" id="app">
-  <!-- Шапка -->
   <header class="glass-header">
     <h1><i class="fas fa-tree" style="margin-right:8px;"></i>Glass Roots</h1>
-    <div style="display:flex; gap:10px; align-items:center;">
+    <div class="header-actions">
       <input type="text" class="search-box" placeholder="Поиск..." id="searchInput">
-      <button class="glass-btn" id="focusRootBtn" title="Сбросить фокус"><i class="fas fa-home"></i></button>
+      <button class="glass-btn" id="focusRootBtn" title="Показать всё древо"><i class="fas fa-home"></i></button>
       <button class="glass-btn" id="exportBtn" title="Скачать зашифрованное древо"><i class="fas fa-download"></i></button>
       <button class="glass-btn" id="importBtn" title="Загрузить древо из файла"><i class="fas fa-upload"></i></button>
       <button class="glass-btn" id="lockBtn" title="Заблокировать доступ"><i class="fas fa-lock"></i></button>
     </div>
   </header>
-
-  <!-- Область дерева -->
   <div class="tree-area" id="treeContainer"></div>
 
   <!-- Панель редактирования -->
@@ -268,7 +232,6 @@
     <button class="glass-btn primary" id="addRelationBtn" style="margin-top:8px; width:100%;">Связать</button>
   </div>
 
-  <!-- Оверлей пароля (показывается при необходимости) -->
   <div class="password-overlay" id="passwordOverlay">
     <div class="password-dialog">
       <h2 id="passTitle">Введите пароль</h2>
@@ -282,18 +245,15 @@
 </div>
 
 <script>
-  // ==================== ОСНОВНОЙ СКРИПТ ====================
   (function() {
-    // ---------- Конфигурация и глобальные переменные ----------
+    // ---------- Константы ----------
     const STORAGE_KEY = 'encryptedFamilyTree';
     let treeData = { persons: [], relationships: [] };
-    let encryptionKey = null;   // CryptoKey для шифрования/дешифрования
-    let passwordSet = false;   // был ли установлен пароль для текущей сессии
-    let selectedPersonId = null;
-    let focusPersonId = null;  // для центрирования на одном человеке
+    let encryptionKey = false;
+    let passwordSet = false;
+    let focusPersonId = null;
 
     // DOM элементы
-    const app = document.getElementById('app');
     const treeContainer = document.getElementById('treeContainer');
     const editPanel = document.getElementById('editPanel');
     const passwordOverlay = document.getElementById('passwordOverlay');
@@ -302,14 +262,6 @@
     const passTitle = document.getElementById('passTitle');
     const createNewLink = document.getElementById('createNewLink');
     const searchInput = document.getElementById('searchInput');
-    const focusRootBtn = document.getElementById('focusRootBtn');
-    const lockBtn = document.getElementById('lockBtn');
-    const exportBtn = document.getElementById('exportBtn');
-    const importBtn = document.getElementById('importBtn');
-    const savePersonBtn = document.getElementById('savePersonBtn');
-    const deletePersonBtn = document.getElementById('deletePersonBtn');
-    const cancelEditBtn = document.getElementById('cancelEditBtn');
-    const addRelationBtn = document.getElementById('addRelationBtn');
     const personIdInput = document.getElementById('personId');
     const firstNameInput = document.getElementById('firstName');
     const lastNameInput = document.getElementById('lastName');
@@ -322,21 +274,18 @@
     const relTypeSelect = document.getElementById('relType');
     const relTargetSelect = document.getElementById('relTarget');
 
-    let svg = null, gMain = null; // D3 selection
+    let svgSelection = null, gMain = null;
+    let zoomBehavior = null;   // <-- сохраняем zoom-объект
 
-    // ---------- Шифрование / Сохранение ----------
-    async function deriveKey(password, salt = null) {
-      const encoder = new TextEncoder();
+    // ---------- Шифрование ----------
+    async function deriveKey(password, salt) {
       if (!salt) salt = crypto.getRandomValues(new Uint8Array(16));
       const keyMaterial = await crypto.subtle.importKey(
-        'raw', encoder.encode(password), 'PBKDF2', false, ['deriveKey']
+        'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']
       );
       const key = await crypto.subtle.deriveKey(
         { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
-        keyMaterial,
-        { name: 'AES-GCM', length: 256 },
-        false,
-        ['encrypt', 'decrypt']
+        keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
       );
       return { key, salt };
     }
@@ -346,33 +295,26 @@
       const iv = crypto.getRandomValues(new Uint8Array(12));
       const encoded = new TextEncoder().encode(JSON.stringify(data));
       const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded);
-      // Сохраняем соль и iv вместе с данными
-      const payload = {
+      return JSON.stringify({
         salt: Array.from(salt),
         iv: Array.from(iv),
         data: Array.from(new Uint8Array(encrypted))
-      };
-      return JSON.stringify(payload);
+      });
     }
 
     async function decryptData(encryptedPayload, password) {
-      try {
-        const payload = JSON.parse(encryptedPayload);
-        const salt = new Uint8Array(payload.salt);
-        const iv = new Uint8Array(payload.iv);
-        const encrypted = new Uint8Array(payload.data);
-        const { key } = await deriveKey(password, salt);
-        const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encrypted);
-        const decoded = new TextDecoder().decode(decrypted);
-        return JSON.parse(decoded);
-      } catch (e) {
-        throw new Error('Неверный пароль или повреждённые данные');
-      }
+      const payload = JSON.parse(encryptedPayload);
+      const salt = new Uint8Array(payload.salt);
+      const iv = new Uint8Array(payload.iv);
+      const encrypted = new Uint8Array(payload.data);
+      const { key } = await deriveKey(password, salt);
+      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encrypted);
+      return JSON.parse(new TextDecoder().decode(decrypted));
     }
 
     async function saveToStorage() {
       if (!encryptionKey) return;
-      const encrypted = await encryptData(treeData, passwordInput.value); // используем пароль из сессии
+      const encrypted = await encryptData(treeData, passwordInput.value);
       localStorage.setItem(STORAGE_KEY, encrypted);
     }
 
@@ -382,24 +324,20 @@
       return await decryptData(stored, password);
     }
 
-    // ---------- Инициализация и проверка пароля ----------
+    // ---------- Пароль ----------
     async function checkStorageAndPrompt() {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        // Данные существуют – просим пароль
         passwordOverlay.style.display = 'flex';
         passTitle.textContent = 'Введите пароль для доступа к древу';
         createNewLink.style.display = 'inline';
-        passwordInput.value = '';
-        passwordInput.focus();
       } else {
-        // Нет данных – предлагаем создать новое древо
         passwordOverlay.style.display = 'flex';
         passTitle.textContent = 'Придумайте пароль для нового древа';
         createNewLink.style.display = 'none';
-        passwordInput.value = '';
-        passwordInput.focus();
       }
+      passwordInput.value = '';
+      passwordInput.focus();
     }
 
     async function handlePasswordSubmit() {
@@ -408,19 +346,15 @@
       const stored = localStorage.getItem(STORAGE_KEY);
       try {
         if (stored) {
-          // Попытка расшифровать существующее древо
           treeData = await loadFromStorage(pass);
-          passwordSet = true;
-          encryptionKey = true; // пометка, что пароль верен (ключ не храним)
         } else {
-          // Создание нового древа
           treeData = { persons: [], relationships: [] };
-          passwordSet = true;
-          encryptionKey = true;
-          await saveToStorage(); // сохраняем пустое дерево с этим паролем
         }
+        passwordSet = true;
+        encryptionKey = true;
         passwordOverlay.style.display = 'none';
-        renderAll();
+        // Небольшая задержка, чтобы контейнер перерисовался и получил размеры
+        setTimeout(() => renderAll(), 50);
       } catch (e) {
         alert(e.message);
       }
@@ -428,87 +362,84 @@
 
     function lockApp() {
       passwordSet = false;
-      encryptionKey = null;
+      encryptionKey = false;
       treeData = { persons: [], relationships: [] };
-      document.getElementById('passwordInput').value = '';
       passwordOverlay.style.display = 'flex';
       passTitle.textContent = 'Введите пароль для доступа к древу';
       createNewLink.style.display = 'inline';
       editPanel.classList.remove('active');
     }
 
-    // ---------- Визуализация дерева с dagre + d3 ----------
+    // ---------- Визуализация ----------
     function renderAll() {
       if (!passwordSet) return;
+      treeContainer.innerHTML = '';
+
       // Строим граф
       const g = new dagre.graphlib.Graph({ directed: true });
       g.setDefaultEdgeLabel(() => ({}));
 
-      // Добавляем узлы
       treeData.persons.forEach(p => {
-        const label = `${p.firstName || '?'} ${p.lastName || ''}`.trim();
-        g.setNode(p.id, { label, person: p, width: 140, height: 60 });
+        g.setNode(p.id, {
+          label: `${p.firstName || '?'} ${p.lastName || ''}`.trim(),
+          person: p,
+          width: 140,
+          height: 60
+        });
       });
 
-      // Добавляем рёбра
       treeData.relationships.forEach(rel => {
         if (rel.type === 'parent') {
-          // направление: родитель -> ребёнок
           g.setEdge(rel.person1, rel.person2, { lineStyle: 'parent' });
         } else if (rel.type === 'spouse') {
-          // ненаправленное ребро, но dagre требует направление; добавим оба направления для связности? 
-          // Или используем неориентированное: просто рисуем специальным стилем.
           g.setEdge(rel.person1, rel.person2, { lineStyle: 'spouse' });
           g.setEdge(rel.person2, rel.person1, { lineStyle: 'spouse' });
         }
       });
 
-      // Определяем, показывать ли всё дерево или только фокусного человека и его близких
+      // Фокусное подмножество
       let nodesToShow = treeData.persons.map(p => p.id);
       if (focusPersonId) {
-        // Получаем предков и потомков
         const ancestors = getAncestors(focusPersonId);
         const descendants = getDescendants(focusPersonId);
         const spouses = getSpouses(focusPersonId);
         nodesToShow = [...new Set([focusPersonId, ...ancestors, ...descendants, ...spouses])];
       }
 
-      // Фильтруем узлы и рёбра
       const filteredNodes = nodesToShow.filter(id => g.hasNode(id));
       const filteredEdges = g.edges().filter(e => nodesToShow.includes(e.v) && nodesToShow.includes(e.w));
 
-      // Создаём подграф
       const subGraph = new dagre.graphlib.Graph({ directed: true });
       subGraph.setDefaultEdgeLabel(() => ({}));
-      filteredNodes.forEach(id => {
-        const node = g.node(id);
-        subGraph.setNode(id, node);
-      });
+      filteredNodes.forEach(id => subGraph.setNode(id, g.node(id)));
       filteredEdges.forEach(e => subGraph.setEdge(e.v, e.w, g.edge(e)));
 
-      // Применяем раскладку
       dagre.layout(subGraph, { rankdir: 'TB', nodesep: 40, ranksep: 60, marginx: 30, marginy: 30 });
 
-      // Очищаем SVG
-      treeContainer.innerHTML = '';
-      const width = treeContainer.clientWidth;
-      const height = treeContainer.clientHeight;
+      // SVG
+      const width = treeContainer.clientWidth || 800;
+      const height = treeContainer.clientHeight || 600;
 
-      svg = d3.select(treeContainer).append('svg')
+      svgSelection = d3.select(treeContainer).append('svg')
         .attr('width', width)
-        .attr('height', height)
-        .call(d3.zoom().scaleExtent([0.3, 3]).on('zoom', (event) => {
+        .attr('height', height);
+
+      // Zoom behavior создаём один раз
+      zoomBehavior = d3.zoom()
+        .scaleExtent([0.3, 3])
+        .on('zoom', (event) => {
           gMain.attr('transform', event.transform);
-        }))
-        .on('click', (event) => {
-          if (event.target === svg.node()) {
-            closeEditPanel();
-          }
         });
 
-      gMain = svg.append('g');
+      svgSelection.call(zoomBehavior);
 
-      // Рисуем рёбра
+      svgSelection.on('click', (event) => {
+        if (event.target === svgSelection.node()) closeEditPanel();
+      });
+
+      gMain = svgSelection.append('g');
+
+      // Рёбра
       const edgesLayer = gMain.append('g');
       subGraph.edges().forEach(e => {
         const points = subGraph.edge(e).points;
@@ -519,25 +450,22 @@
             .attr('fill', 'none')
             .attr('stroke', style === 'spouse' ? '#ff9f43' : '#8395a7')
             .attr('stroke-width', 2)
-            .attr('stroke-dasharray', style === 'spouse' ? '6,4' : 'none')
-            .attr('marker-end', style === 'parent' ? 'url(#arrowhead)' : '');
+            .attr('stroke-dasharray', style === 'spouse' ? '6,4' : 'none');
         }
       });
 
-      // Определяем маркер для стрелки
-      svg.append('defs').append('marker')
+      // Маркер для стрелок
+      svgSelection.append('defs').append('marker')
         .attr('id', 'arrowhead')
         .attr('viewBox', '0 0 10 10')
-        .attr('refX', 10)
-        .attr('refY', 5)
-        .attr('markerWidth', 6)
-        .attr('markerHeight', 6)
+        .attr('refX', 10).attr('refY', 5)
+        .attr('markerWidth', 6).attr('markerHeight', 6)
         .attr('orient', 'auto')
         .append('path')
         .attr('d', 'M 0 0 L 10 5 L 0 10 Z')
         .attr('fill', '#8395a7');
 
-      // Рисуем узлы
+      // Узлы
       const nodesLayer = gMain.append('g');
       subGraph.nodes().forEach(nodeId => {
         const node = subGraph.node(nodeId);
@@ -550,7 +478,6 @@
             openEditPanel(person.id);
           });
 
-        // Карточка
         group.append('rect')
           .attr('width', node.width)
           .attr('height', node.height)
@@ -559,18 +486,14 @@
           .attr('stroke', 'rgba(255,255,255,0.9)')
           .attr('stroke-width', 2);
 
-        // Фото (если есть)
         if (person.photo) {
           group.append('image')
-            .attr('x', 6)
-            .attr('y', 6)
-            .attr('width', 28)
-            .attr('height', 28)
+            .attr('x', 6).attr('y', 6)
+            .attr('width', 28).attr('height', 28)
             .attr('clip-path', 'circle(14px at 14px 14px)')
             .attr('href', person.photo);
         }
 
-        // Имя
         group.append('text')
           .attr('x', person.photo ? 40 : 12)
           .attr('y', 24)
@@ -578,7 +501,6 @@
           .attr('font-size', '12px')
           .attr('font-weight', '500')
           .text(person.firstName || '???');
-        
         group.append('text')
           .attr('x', person.photo ? 40 : 12)
           .attr('y', 42)
@@ -587,7 +509,7 @@
           .text(person.lastName || '');
       });
 
-      // Центрируем вид
+      // Автоцентрирование
       if (subGraph.nodes().length > 0) {
         const bounds = subGraph.nodes().reduce((acc, id) => {
           const n = subGraph.node(id);
@@ -598,19 +520,24 @@
             maxY: Math.max(acc.maxY, n.y + n.height/2)
           };
         }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
+
         const graphWidth = bounds.maxX - bounds.minX + 80;
         const graphHeight = bounds.maxY - bounds.minY + 80;
         const scale = Math.min(width / graphWidth, height / graphHeight, 1.2);
         const centerX = (bounds.minX + bounds.maxX) / 2;
         const centerY = (bounds.minY + bounds.maxY) / 2;
-        svg.call(d3.zoom().transform, d3.zoomIdentity
+
+        const initialTransform = d3.zoomIdentity
           .translate(width/2, height/2)
           .scale(scale)
-          .translate(-centerX, -centerY));
+          .translate(-centerX, -centerY);
+
+        // Правильный вызов transform через сохранённый zoomBehavior
+        svgSelection.call(zoomBehavior.transform, initialTransform);
       }
     }
 
-    // ---------- Вспомогательные функции обхода ----------
+    // Обход родственников
     function getAncestors(personId) {
       const ancestors = new Set();
       const stack = [personId];
@@ -647,7 +574,7 @@
         .map(r => r.person1 === personId ? r.person2 : r.person1);
     }
 
-    // ---------- Управление панелью редактирования ----------
+    // Панель редактирования
     function openEditPanel(personId = null) {
       editPanel.classList.add('active');
       if (personId) {
@@ -661,7 +588,7 @@
         genderInput.value = person.gender || 'male';
         notesInput.value = person.notes || '';
         photoPreview.innerHTML = person.photo ? `<img src="${person.photo}" style="max-width:80px; border-radius:50%;">` : '';
-        deletePersonBtn.style.display = 'inline-block';
+        document.getElementById('deletePersonBtn').style.display = 'inline-block';
         document.getElementById('editTitle').textContent = 'Редактировать';
       } else {
         personIdInput.value = '';
@@ -672,7 +599,7 @@
         genderInput.value = 'male';
         notesInput.value = '';
         photoPreview.innerHTML = '';
-        deletePersonBtn.style.display = 'none';
+        document.getElementById('deletePersonBtn').style.display = 'none';
         document.getElementById('editTitle').textContent = 'Добавить человека';
       }
       populateRelationTargets(personId);
@@ -718,13 +645,9 @@
       };
 
       if (id) {
-        // Редактирование
         const index = treeData.persons.findIndex(p => p.id === id);
-        if (index !== -1) {
-          treeData.persons[index] = { ...treeData.persons[index], ...personData };
-        }
+        if (index !== -1) treeData.persons[index] = { ...treeData.persons[index], ...personData };
       } else {
-        // Новый человек
         const newId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
         treeData.persons.push({ id: newId, ...personData });
       }
@@ -751,10 +674,10 @@
       const type = relTypeSelect.value;
       if (!sourceId || !targetId) return alert('Выберите человека для связи');
       if (sourceId === targetId) return alert('Нельзя связать с самим собой');
-      // Проверка на дубликаты
-      const exists = treeData.relationships.some(r => 
+      const exists = treeData.relationships.some(r =>
         (r.type === type && r.person1 === sourceId && r.person2 === targetId) ||
-        (type === 'spouse' && r.type === 'spouse' && ((r.person1 === sourceId && r.person2 === targetId) || (r.person1 === targetId && r.person2 === sourceId)))
+        (type === 'spouse' && r.type === 'spouse' &&
+          ((r.person1 === sourceId && r.person2 === targetId) || (r.person1 === targetId && r.person2 === sourceId)))
       );
       if (exists) return alert('Такая связь уже существует');
       treeData.relationships.push({ type, person1: sourceId, person2: targetId });
@@ -763,73 +686,55 @@
       renderAll();
     }
 
-    // ---------- Обработчики событий ----------
-    savePersonBtn.addEventListener('click', savePerson);
-    deletePersonBtn.addEventListener('click', deletePerson);
-    cancelEditBtn.addEventListener('click', closeEditPanel);
-    addRelationBtn.addEventListener('click', addRelation);
+    // Обработчики кнопок
+    document.getElementById('savePersonBtn').addEventListener('click', savePerson);
+    document.getElementById('deletePersonBtn').addEventListener('click', deletePerson);
+    document.getElementById('cancelEditBtn').addEventListener('click', closeEditPanel);
+    document.getElementById('addRelationBtn').addEventListener('click', addRelation);
 
-    // Фокус и сброс
-    focusRootBtn.addEventListener('click', () => {
+    document.getElementById('focusRootBtn').addEventListener('click', () => {
       focusPersonId = null;
       renderAll();
     });
 
-    // Поиск
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase();
-      if (!query) {
-        focusPersonId = null;
-        renderAll();
-        return;
-      }
-      const found = treeData.persons.find(p => 
+      if (!query) { focusPersonId = null; renderAll(); return; }
+      const found = treeData.persons.find(p =>
         `${p.firstName} ${p.lastName}`.toLowerCase().includes(query)
       );
-      if (found) {
-        focusPersonId = found.id;
-        renderAll();
-      }
+      if (found) { focusPersonId = found.id; renderAll(); }
     });
 
-    // Блокировка
-    lockBtn.addEventListener('click', lockApp);
+    document.getElementById('lockBtn').addEventListener('click', lockApp);
 
-    // Экспорт
-    exportBtn.addEventListener('click', async () => {
-      if (!encryptionKey) return;
+    document.getElementById('exportBtn').addEventListener('click', () => {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) return alert('Нет данных для экспорта');
+      if (!stored) return alert('Нет данных');
       const blob = new Blob([stored], {type: 'application/json'});
-      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
+      a.href = URL.createObjectURL(blob);
       a.download = 'family_tree_encrypted.json';
       a.click();
-      URL.revokeObjectURL(url);
     });
 
-    // Импорт
-    importBtn.addEventListener('click', () => {
+    document.getElementById('importBtn').addEventListener('click', () => {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.json';
-      input.onchange = async (e) => {
+      input.onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = async (ev) => {
-          const content = ev.target.result;
-          // Заменяем localStorage и просим пароль
-          localStorage.setItem(STORAGE_KEY, content);
-          lockApp(); // заставит ввести пароль от импортированного древа
+        reader.onload = (ev) => {
+          localStorage.setItem(STORAGE_KEY, ev.target.result);
+          lockApp();
         };
         reader.readAsText(file);
       };
       input.click();
     });
 
-    // Оверлей пароля
     passwordSubmit.addEventListener('click', handlePasswordSubmit);
     passwordInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') handlePasswordSubmit();
@@ -837,12 +742,12 @@
     createNewLink.addEventListener('click', (e) => {
       e.preventDefault();
       localStorage.removeItem(STORAGE_KEY);
-      passwordOverlay.querySelector('h2').textContent = 'Придумайте пароль для нового древа';
+      passTitle.textContent = 'Придумайте пароль для нового древа';
       createNewLink.style.display = 'none';
       passwordInput.value = '';
     });
 
-    // Инициализация
+    // Старт
     checkStorageAndPrompt();
   })();
 </script>
