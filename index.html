@@ -116,6 +116,8 @@
     }
     .tree-area:active { cursor: grabbing; }
     .tree-area svg { width: 100%; height: 100%; }
+
+    /* Модальное окно редактирования */
     .modal-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -172,8 +174,32 @@
       cursor: pointer;
       line-height: 1;
     }
+
+    /* Диалог связи */
+    .relation-dialog {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+    .relation-dialog h3 { margin-bottom: 12px; font-weight: 400; color: #2c3e50; }
+    .relation-dialog button {
+      margin: 6px;
+      padding: 10px 20px;
+    }
+
     .node-card { cursor: pointer; transition: all 0.2s; }
     .node-card:hover { filter: brightness(1.05); transform: scale(1.02); }
+    .port {
+      cursor: crosshair;
+      fill: rgba(100, 149, 237, 0.7);
+      stroke: white;
+      stroke-width: 2;
+    }
+    .port:hover { fill: rgba(100, 149, 237, 1); }
+
     .empty-tree-message {
       position: absolute;
       top: 50%; left: 50%;
@@ -246,7 +272,7 @@
 
   <div class="tree-area" id="treeContainer"></div>
 
-  <!-- Модальное окно редактирования -->
+  <!-- Модальное окно редактирования человека (без блока связей) -->
   <div class="modal-overlay" id="editModal">
     <div class="edit-panel">
       <button class="close-modal-btn" id="closeModalBtn">&times;</button>
@@ -276,13 +302,15 @@
         <button class="glass-btn" id="deletePersonBtn" style="display:none; background: rgba(220, 80, 80, 0.8); color: white;">Удалить</button>
         <button class="glass-btn" id="cancelEditBtn">Отмена</button>
       </div>
-      <hr style="margin:16px 0; border-color:rgba(0,0,0,0.05);">
-      <label>Добавить связь</label>
-      <div class="row">
-        <select id="relType"><option value="parent">Родитель →</option><option value="spouse">Супруг(а)</option></select>
-        <select id="relTarget"></select>
-      </div>
-      <button class="glass-btn primary" id="addRelationBtn" style="margin-top:8px; width:100%;">Связать</button>
+    </div>
+  </div>
+
+  <!-- Оверлей выбора связи (drag-and-drop) -->
+  <div class="modal-overlay" id="relationModal">
+    <div class="relation-dialog">
+      <h3 id="relationTitle">Выберите тип связи</h3>
+      <div id="relationButtons"></div>
+      <button class="glass-btn" id="cancelRelationBtn" style="margin-top:12px;">Отмена</button>
     </div>
   </div>
 
@@ -310,9 +338,10 @@
     let currentLogin = '';
     let focusPersonId = null;
 
-    // DOM элементы
+    // DOM
     const treeContainer = document.getElementById('treeContainer');
     const editModal = document.getElementById('editModal');
+    const relationModal = document.getElementById('relationModal');
     const passwordOverlay = document.getElementById('passwordOverlay');
     const loginInput = document.getElementById('loginInput');
     const passwordInput = document.getElementById('passwordInput');
@@ -329,18 +358,13 @@
     const photoInput = document.getElementById('photoInput');
     const photoPreview = document.getElementById('photoPreview');
     const notesInput = document.getElementById('notes');
-    const relTypeSelect = document.getElementById('relType');
-    const relTargetSelect = document.getElementById('relTarget');
 
     let svgSelection = null, gMain = null, zoomBehavior = null;
+    let dragSource = null, dragTarget = null; // для drag-and-drop связи
 
-    // ---------- Управление состоянием кнопки ----------
+    // ---------- Кнопка Продолжить ----------
     function updateSubmitButtonState() {
-      if (passwordInput.value.trim() === '') {
-        passwordSubmit.classList.add('disabled');
-      } else {
-        passwordSubmit.classList.remove('disabled');
-      }
+      passwordSubmit.classList.toggle('disabled', passwordInput.value.trim() === '');
     }
     passwordInput.addEventListener('input', updateSubmitButtonState);
 
@@ -351,11 +375,10 @@
       const keyMaterial = await crypto.subtle.importKey(
         'raw', new TextEncoder().encode(combined), 'PBKDF2', false, ['deriveKey']
       );
-      const key = await crypto.subtle.deriveKey(
+      return await crypto.subtle.deriveKey(
         { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
         keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
       );
-      return { key, salt };
     }
 
     async function encryptData(data, login, password) {
@@ -365,21 +388,15 @@
       const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded);
       return {
         login,
-        payload: JSON.stringify({
-          salt: Array.from(salt),
-          iv: Array.from(iv),
-          data: Array.from(new Uint8Array(encrypted))
-        })
+        payload: JSON.stringify({ salt: Array.from(salt), iv: Array.from(iv), data: Array.from(new Uint8Array(encrypted)) })
       };
     }
 
     async function decryptData(stored, login, password) {
       if (stored.login !== login) throw new Error('Неверный логин');
       const { salt, iv, data } = JSON.parse(stored.payload);
-      const { key } = await deriveKey(login, password, new Uint8Array(salt));
-      const decrypted = await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv: new Uint8Array(iv) }, key, new Uint8Array(data)
-      );
+      const key = await deriveKey(login, password, new Uint8Array(salt));
+      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(iv) }, key, new Uint8Array(data));
       return JSON.parse(new TextDecoder().decode(decrypted));
     }
 
@@ -395,7 +412,7 @@
       return await decryptData(JSON.parse(raw), login, password);
     }
 
-    // ---------- Инициализация и вход ----------
+    // ---------- Вход ----------
     async function checkStorageAndPrompt() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -444,10 +461,10 @@
       loginInput.value = '';
       passwordInput.value = '';
       updateSubmitButtonState();
-      closeEditPanel();
+      closeEditModal();
     }
 
-    // ---------- Рендеринг дерева ----------
+    // ---------- Рендеринг дерева с портами ----------
     function renderAll() {
       if (!passwordSet) return;
       treeContainer.innerHTML = '';
@@ -495,8 +512,7 @@
       defs.append('pattern')
         .attr('id', 'dotPattern')
         .attr('patternUnits', 'userSpaceOnUse')
-        .attr('width', 20)
-        .attr('height', 20)
+        .attr('width', 20).attr('height', 20)
         .append('circle')
         .attr('cx', 10).attr('cy', 10).attr('r', 1.8)
         .attr('fill', 'rgba(44, 62, 80, 0.3)');
@@ -507,26 +523,22 @@
         .attr('refX', 10).attr('refY', 5)
         .attr('markerWidth', 6).attr('markerHeight', 6)
         .attr('orient', 'auto')
-        .append('path')
-        .attr('d', 'M 0 0 L 10 5 L 0 10 Z')
-        .attr('fill', '#8395a7');
+        .append('path').attr('d', 'M 0 0 L 10 5 L 0 10 Z').attr('fill', '#8395a7');
 
       zoomBehavior = d3.zoom().scaleExtent([0.3, 3]).on('zoom', (event) => {
         gMain.attr('transform', event.transform);
       });
       svgSelection.call(zoomBehavior);
       svgSelection.on('click', (event) => {
-        if (event.target === svgSelection.node()) closeEditPanel();
+        if (event.target === svgSelection.node()) closeEditModal();
       });
 
       gMain = svgSelection.append('g');
 
       // Точечный фон
       gMain.append('rect')
-        .attr('width', 20000)
-        .attr('height', 20000)
-        .attr('x', -10000)
-        .attr('y', -10000)
+        .attr('width', 20000).attr('height', 20000)
+        .attr('x', -10000).attr('y', -10000)
         .attr('fill', 'url(#dotPattern)');
 
       // Рёбра
@@ -545,19 +557,16 @@
         }
       });
 
-      // Узлы
+      // Узлы с портами
       const nodesLayer = gMain.append('g');
       subGraph.nodes().forEach(nodeId => {
         const node = subGraph.node(nodeId);
         const person = node.person;
         const card = nodesLayer.append('g')
           .attr('class', 'node-card')
-          .attr('transform', `translate(${node.x - node.width/2}, ${node.y - node.height/2})`)
-          .on('click', (event) => {
-            event.stopPropagation();
-            openEditPanel(person.id);
-          });
+          .attr('transform', `translate(${node.x - node.width/2}, ${node.y - node.height/2})`);
 
+        // Карточка
         card.append('rect')
           .attr('width', node.width)
           .attr('height', node.height)
@@ -582,6 +591,64 @@
           .attr('x', person.photo ? 40 : 12).attr('y', 42)
           .attr('fill', '#7f8c8d').attr('font-size', '10px')
           .text(person.lastName || '');
+
+        // Клик по карточке открывает редактирование
+        card.on('click', (event) => {
+          event.stopPropagation();
+          openEditModal(person.id);
+        });
+
+        // Порты (верхний и нижний)
+        const portUp = card.append('circle')
+          .attr('cx', node.width/2).attr('cy', 0)
+          .attr('r', 8)
+          .attr('class', 'port')
+          .attr('data-person-id', person.id)
+          .attr('data-port', 'up');
+
+        const portDown = card.append('circle')
+          .attr('cx', node.width/2).attr('cy', node.height)
+          .attr('r', 8)
+          .attr('class', 'port')
+          .attr('data-person-id', person.id)
+          .attr('data-port', 'down');
+
+        // Drag на портах
+        [portUp, portDown].forEach(port => {
+          port.call(d3.drag()
+            .on('start', function(event) {
+              dragSource = d3.select(this).attr('data-person-id');
+              // Создаём временную линию
+              gMain.append('line')
+                .attr('id', 'dragLine')
+                .attr('x1', +d3.select(this).attr('cx') + node.x - node.width/2)
+                .attr('y1', +d3.select(this).attr('cy') + node.y - node.height/2)
+                .attr('x2', +d3.select(this).attr('cx') + node.x - node.width/2)
+                .attr('y2', +d3.select(this).attr('cy') + node.y - node.height/2)
+                .attr('stroke', '#ff9f43')
+                .attr('stroke-width', 2)
+                .attr('stroke-dasharray', '5,3');
+            })
+            .on('drag', function(event) {
+              const line = gMain.select('#dragLine');
+              if (!line.empty()) {
+                line.attr('x2', event.x).attr('y2', event.y);
+              }
+            })
+            .on('end', function(event) {
+              const line = gMain.select('#dragLine');
+              if (!line.empty()) line.remove();
+              // Определяем целевой узел под курсором
+              const targetElement = document.elementFromPoint(event.sourceEvent.clientX, event.sourceEvent.clientY);
+              const targetPort = targetElement?.closest('.port');
+              if (targetPort && dragSource && targetPort.getAttribute('data-person-id') !== dragSource) {
+                dragTarget = targetPort.getAttribute('data-person-id');
+                showRelationDialog(dragSource, dragTarget);
+              }
+              dragSource = null;
+            })
+          );
+        });
       });
 
       // Автоцентрирование
@@ -600,54 +667,38 @@
         const scale = Math.min(width / graphWidth, height / graphHeight, 1.2);
         const centerX = (bounds.minX + bounds.maxX) / 2;
         const centerY = (bounds.minY + bounds.maxY) / 2;
-        const transform = d3.zoomIdentity.translate(width/2, height/2).scale(scale).translate(-centerX, -centerY);
-        svgSelection.call(zoomBehavior.transform, transform);
+        svgSelection.call(zoomBehavior.transform, d3.zoomIdentity.translate(width/2, height/2).scale(scale).translate(-centerX, -centerY));
       }
     }
 
-    // ---------- Обход родственных связей ----------
-    function getAncestors(personId) {
-      const ancestors = new Set();
-      const stack = [personId];
+    // ---------- Обход связей ----------
+    function getAncestors(id) {
+      const set = new Set(), stack = [id];
       while (stack.length) {
         const curr = stack.pop();
-        treeData.relationships
-          .filter(r => r.type === 'parent' && r.person2 === curr)
-          .forEach(r => {
-            if (!ancestors.has(r.person1)) {
-              ancestors.add(r.person1);
-              stack.push(r.person1);
-            }
-          });
+        treeData.relationships.filter(r => r.type === 'parent' && r.person2 === curr).forEach(r => {
+          if (!set.has(r.person1)) { set.add(r.person1); stack.push(r.person1); }
+        });
       }
-      return Array.from(ancestors);
+      return [...set];
     }
-
-    function getDescendants(personId) {
-      const descendants = new Set();
-      const stack = [personId];
+    function getDescendants(id) {
+      const set = new Set(), stack = [id];
       while (stack.length) {
         const curr = stack.pop();
-        treeData.relationships
-          .filter(r => r.type === 'parent' && r.person1 === curr)
-          .forEach(r => {
-            if (!descendants.has(r.person2)) {
-              descendants.add(r.person2);
-              stack.push(r.person2);
-            }
-          });
+        treeData.relationships.filter(r => r.type === 'parent' && r.person1 === curr).forEach(r => {
+          if (!set.has(r.person2)) { set.add(r.person2); stack.push(r.person2); }
+        });
       }
-      return Array.from(descendants);
+      return [...set];
+    }
+    function getSpouses(id) {
+      return treeData.relationships.filter(r => r.type === 'spouse' && (r.person1 === id || r.person2 === id))
+        .map(r => r.person1 === id ? r.person2 : r.person1);
     }
 
-    function getSpouses(personId) {
-      return treeData.relationships
-        .filter(r => r.type === 'spouse' && (r.person1 === personId || r.person2 === personId))
-        .map(r => r.person1 === personId ? r.person2 : r.person1);
-    }
-
-    // ---------- Модальное окно редактирования ----------
-    function openEditPanel(personId = null) {
+    // ---------- Модальные окна ----------
+    function openEditModal(personId = null) {
       if (personId) {
         const person = treeData.persons.find(p => p.id === personId);
         if (!person) return;
@@ -673,33 +724,16 @@
         document.getElementById('deletePersonBtn').style.display = 'none';
         document.getElementById('editTitle').textContent = 'Добавить человека';
       }
-      populateRelationTargets(personId);
       editModal.classList.add('active');
     }
 
-    function closeEditPanel() {
-      editModal.classList.remove('active');
-    }
-
-    function populateRelationTargets(excludeId) {
-      relTargetSelect.innerHTML = '';
-      treeData.persons.forEach(p => {
-        if (p.id !== excludeId) {
-          const opt = document.createElement('option');
-          opt.value = p.id;
-          opt.textContent = `${p.firstName || '?'} ${p.lastName || ''}`;
-          relTargetSelect.appendChild(opt);
-        }
-      });
-    }
+    function closeEditModal() { editModal.classList.remove('active'); }
 
     photoInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = (ev) => {
-          photoPreview.innerHTML = `<img src="${ev.target.result}" style="max-width:80px; border-radius:50%;">`;
-        };
+        reader.onload = (ev) => { photoPreview.innerHTML = `<img src="${ev.target.result}" style="max-width:80px; border-radius:50%;">`; };
         reader.readAsDataURL(file);
       }
     });
@@ -723,7 +757,7 @@
         treeData.persons.push({ id: newId, ...data });
       }
       await saveToStorage();
-      closeEditPanel();
+      closeEditModal();
       renderAll();
     }
 
@@ -735,97 +769,104 @@
       treeData.relationships = treeData.relationships.filter(r => r.person1 !== id && r.person2 !== id);
       if (focusPersonId === id) focusPersonId = null;
       await saveToStorage();
-      closeEditPanel();
+      closeEditModal();
       renderAll();
     }
 
-    async function addRelation() {
-      const sourceId = personIdInput.value;
-      const targetId = relTargetSelect.value;
-      const type = relTypeSelect.value;
-      if (!sourceId || !targetId) return alert('Выберите человека для связи');
-      if (sourceId === targetId) return alert('Нельзя связать самого с собой');
+    // Диалог связи после drag-and-drop
+    function showRelationDialog(sourceId, targetId) {
+      const source = treeData.persons.find(p => p.id === sourceId);
+      const target = treeData.persons.find(p => p.id === targetId);
+      if (!source || !target) return;
+      document.getElementById('relationTitle').textContent =
+        `Связь: ${source.firstName || '?'} ${source.lastName || ''} ↔ ${target.firstName || '?'} ${target.lastName || ''}`;
+      const buttonsDiv = document.getElementById('relationButtons');
+      buttonsDiv.innerHTML = '';
+      const options = [
+        { text: `${source.firstName || '?'} – родитель, ${target.firstName || '?'} – ребёнок`, type: 'parent', dir: 1 },
+        { text: `${target.firstName || '?'} – родитель, ${source.firstName || '?'} – ребёнок`, type: 'parent', dir: 2 },
+        { text: 'Супруги', type: 'spouse', dir: 0 }
+      ];
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'glass-btn';
+        btn.textContent = opt.text;
+        btn.onclick = async () => {
+          if (opt.type === 'parent') {
+            if (opt.dir === 1) addRelation(sourceId, targetId, 'parent');
+            else addRelation(targetId, sourceId, 'parent');
+          } else {
+            addRelation(sourceId, targetId, 'spouse');
+          }
+          closeRelationModal();
+        };
+        buttonsDiv.appendChild(btn);
+      });
+      relationModal.classList.add('active');
+    }
+
+    function closeRelationModal() {
+      relationModal.classList.remove('active');
+      dragSource = dragTarget = null;
+    }
+
+    async function addRelation(person1, person2, type) {
+      if (person1 === person2) return;
       const exists = treeData.relationships.some(r =>
-        (r.type === type && r.person1 === sourceId && r.person2 === targetId) ||
-        (type === 'spouse' && r.type === 'spouse' && ((r.person1 === sourceId && r.person2 === targetId) || (r.person1 === targetId && r.person2 === sourceId)))
+        (r.type === type && r.person1 === person1 && r.person2 === person2) ||
+        (type === 'spouse' && r.type === 'spouse' && ((r.person1 === person1 && r.person2 === person2) || (r.person1 === person2 && r.person2 === person1)))
       );
       if (exists) return alert('Такая связь уже существует');
-      treeData.relationships.push({ type, person1: sourceId, person2: targetId });
+      treeData.relationships.push({ type, person1, person2 });
       await saveToStorage();
-      closeEditPanel();
       renderAll();
     }
 
     // ---------- Обработчики кнопок ----------
     document.getElementById('savePersonBtn').addEventListener('click', savePerson);
     document.getElementById('deletePersonBtn').addEventListener('click', deletePerson);
-    document.getElementById('cancelEditBtn').addEventListener('click', closeEditPanel);
-    document.getElementById('addRelationBtn').addEventListener('click', addRelation);
-    document.getElementById('closeModalBtn').addEventListener('click', closeEditPanel);
-    editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditPanel(); });
+    document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
+    document.getElementById('closeModalBtn').addEventListener('click', closeEditModal);
+    editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
+    document.getElementById('cancelRelationBtn').addEventListener('click', closeRelationModal);
+    relationModal.addEventListener('click', (e) => { if (e.target === relationModal) closeRelationModal(); });
 
-    document.getElementById('addPersonBtn').addEventListener('click', () => openEditPanel(null));
-
-    document.getElementById('focusRootBtn').addEventListener('click', () => {
-      focusPersonId = null;
-      renderAll();
-    });
-
+    document.getElementById('addPersonBtn').addEventListener('click', () => openEditModal(null));
+    document.getElementById('focusRootBtn').addEventListener('click', () => { focusPersonId = null; renderAll(); });
     searchInput.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      if (!query) {
-        focusPersonId = null;
-        renderAll();
-        return;
-      }
-      const found = treeData.persons.find(p =>
-        `${p.firstName} ${p.lastName}`.toLowerCase().includes(query)
-      );
-      if (found) {
-        focusPersonId = found.id;
-        renderAll();
-      }
+      const q = e.target.value.toLowerCase();
+      if (!q) { focusPersonId = null; renderAll(); return; }
+      const found = treeData.persons.find(p => `${p.firstName} ${p.lastName}`.toLowerCase().includes(q));
+      if (found) { focusPersonId = found.id; renderAll(); }
     });
-
     document.getElementById('lockBtn').addEventListener('click', lockApp);
-
     document.getElementById('exportBtn').addEventListener('click', () => {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) return alert('Нет данных для экспорта');
-      const blob = new Blob([stored], { type: 'application/json' });
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (!data) return alert('Нет данных');
+      const blob = new Blob([data], {type: 'application/json'});
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'family_tree_encrypted.json';
       a.click();
-      URL.revokeObjectURL(a.href);
     });
-
     document.getElementById('importBtn').addEventListener('click', () => {
       const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
+      input.type = 'file'; input.accept = '.json';
       input.onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = (ev) => {
-          localStorage.setItem(STORAGE_KEY, ev.target.result);
-          lockApp();
-        };
+        reader.onload = (ev) => { localStorage.setItem(STORAGE_KEY, ev.target.result); lockApp(); };
         reader.readAsText(file);
       };
       input.click();
     });
-
     document.getElementById('undoBtn').addEventListener('click', () => alert('Отмена в разработке'));
     document.getElementById('redoBtn').addEventListener('click', () => alert('Повтор в разработке'));
 
-    // ---------- Окно входа ----------
     passwordSubmit.addEventListener('click', handlePasswordSubmit);
     passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handlePasswordSubmit(); });
     loginInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') passwordInput.focus(); });
-
-    // Кнопка «Создать новое древо» — полная реализация
     createNewLink.addEventListener('click', (e) => {
       e.preventDefault();
       localStorage.removeItem(STORAGE_KEY);
