@@ -31,7 +31,7 @@
       overflow: hidden;
       position: relative;
     }
-    /* ----- Шапка (два ряда) ----- */
+    /* Шапка */
     .glass-header {
       background: rgba(255, 255, 255, 0.4);
       backdrop-filter: blur(10px);
@@ -72,40 +72,37 @@
       flex-wrap: wrap;
       padding-bottom: 4px;
     }
-    /* ----- Кнопки в стиле жидкого стекла ----- */
+    /* Яркие кнопки (синие) – все, кроме специально переопределённых */
     .glass-btn {
-      background: rgba(255, 255, 255, 0.5);
+      background: rgba(100, 149, 237, 0.85);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.6);
       border-radius: 16px;
       padding: 10px 18px;
-      color: #2c3e50;
+      color: white;
       font-size: 0.9rem;
       cursor: pointer;
       transition: all 0.3s ease;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-weight: 500;
+      font-weight: 600;
       white-space: nowrap;
     }
     .glass-btn:hover {
-      background: rgba(255, 255, 255, 0.75);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      background: rgba(70, 130, 220, 0.95);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       transform: translateY(-1px);
     }
     .glass-btn i { font-size: 1rem; }
-    .glass-btn.primary {
-      background: rgba(100, 149, 237, 0.8);
-      border-color: rgba(255, 255, 255, 0.9);
-      color: white;
-      font-weight: 600;
-    }
-    .glass-btn.primary.disabled {
+    /* Только кнопка «Продолжить» может быть блёклой */
+    .glass-btn.disabled {
       background: rgba(100, 149, 237, 0.3);
       pointer-events: none;
-      color: rgba(255,255,255,0.7);
+      color: rgba(255,255,255,0.6);
+      border-color: rgba(255,255,255,0.3);
     }
+    /* Поле поиска */
     .search-box {
       background: rgba(255, 255, 255, 0.4);
       backdrop-filter: blur(10px);
@@ -118,50 +115,57 @@
       outline: none;
     }
     .search-box::placeholder { color: #7f8c8d; }
-    /* ----- Область дерева с точками ----- */
+
+    /* Область дерева */
     .tree-area {
       flex: 1;
       position: relative;
       overflow: hidden;
-      background-color: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
       cursor: grab;
     }
     .tree-area:active { cursor: grabbing; }
     .tree-area svg { width: 100%; height: 100%; }
-    /* Паттерн точек будет в SVG, фон зададим прозрачным */
-    .tree-area .dots-bg {
+
+    /* Модальное окно (по центру, с блюром) */
+    .modal-overlay {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: 0;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 15;
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.3s ease;
     }
-    /* ----- Панель редактирования (выезжающая) ----- */
+    .modal-overlay.active {
+      visibility: visible;
+      opacity: 1;
+    }
     .edit-panel {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 340px;
-      max-height: calc(100vh - 120px);
-      background: rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.8);
       backdrop-filter: blur(25px);
       border: 1px solid rgba(255, 255, 255, 0.5);
-      border-radius: 24px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-      padding: 24px;
+      border-radius: 28px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+      padding: 28px;
+      width: 400px;
+      max-width: 90vw;
+      max-height: 85vh;
       overflow-y: auto;
-      transform: translateX(120%);
-      transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-      z-index: 10;
+      position: relative;
     }
-    .edit-panel.active { transform: translateX(0); }
-    .edit-panel h3 { margin-bottom: 16px; font-weight: 400; color: #2c3e50; }
+    .edit-panel h3 { margin-bottom: 18px; font-weight: 400; color: #2c3e50; }
     .edit-panel label { display: block; margin-bottom: 6px; font-size: 0.8rem; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; }
     .edit-panel input, .edit-panel textarea, .edit-panel select {
       width: 100%;
-      background: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.7);
       backdrop-filter: blur(5px);
-      border: 1px solid rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.9);
       border-radius: 12px;
       padding: 10px 14px;
       margin-bottom: 14px;
@@ -173,42 +177,20 @@
     .edit-panel textarea { min-height: 60px; }
     .edit-panel .row { display: flex; gap: 10px; }
     .edit-panel .row > * { flex: 1; }
-    /* ----- Оверлей пароля ----- */
-    .password-overlay {
+    .close-modal-btn {
       position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(15px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 20;
+      top: 12px; right: 16px;
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      color: #7f8c8d;
+      cursor: pointer;
+      line-height: 1;
     }
-    .password-dialog {
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(25px);
-      border-radius: 28px;
-      padding: 32px;
-      max-width: 360px;
-      width: 90%;
-      text-align: center;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-    }
-    .password-dialog h2 { font-weight: 300; margin-bottom: 20px; color: #2c3e50; }
-    .password-dialog input {
-      width: 100%;
-      margin-bottom: 16px;
-      background: rgba(255, 255, 255, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.8);
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 1rem;
-      outline: none;
-    }
-    .password-dialog input:last-of-type { margin-bottom: 20px; }
+    /* Карточка человека */
     .node-card { cursor: pointer; transition: all 0.2s; }
     .node-card:hover { filter: brightness(1.05); transform: scale(1.02); }
-    /* Сообщение о пустом древе */
+
     .empty-tree-message {
       position: absolute;
       top: 50%; left: 50%;
@@ -218,8 +200,9 @@
       pointer-events: none;
       text-align: center;
     }
+
     @media (max-width: 700px) {
-      .edit-panel { width: 280px; }
+      .edit-panel { width: 95vw; }
       .header-top h1 { font-size: 1.2rem; }
       .search-box { width: 120px; }
     }
@@ -227,7 +210,7 @@
 </head>
 <body>
 <div class="app-container" id="app">
-  <!-- Шапка с двумя рядами -->
+  <!-- Шапка -->
   <header class="glass-header">
     <div class="header-top">
       <h1><i class="fas fa-tree"></i> Family Roots</h1>
@@ -240,8 +223,7 @@
       </div>
     </div>
     <div class="header-tools">
-      <button class="glass-btn primary" id="addPersonBtn"><i class="fas fa-plus"></i> Добавить человека</button>
-      <!-- Заготовки под будущие инструменты -->
+      <button class="glass-btn" id="addPersonBtn"><i class="fas fa-plus"></i> Добавить человека</button>
       <button class="glass-btn" id="undoBtn" title="Отменить"><i class="fas fa-undo"></i></button>
       <button class="glass-btn" id="redoBtn" title="Повторить"><i class="fas fa-redo"></i></button>
       <span style="flex:1;"></span>
@@ -249,45 +231,46 @@
   </header>
 
   <!-- Область дерева -->
-  <div class="tree-area" id="treeContainer">
-    <!-- Сообщение о пустом древе будет добавляться динамически -->
-  </div>
+  <div class="tree-area" id="treeContainer"></div>
 
-  <!-- Панель редактирования -->
-  <div class="edit-panel" id="editPanel">
-    <h3 id="editTitle">Добавить человека</h3>
-    <input type="hidden" id="personId">
-    <label>Имя</label>
-    <input type="text" id="firstName" placeholder="Имя">
-    <label>Фамилия</label>
-    <input type="text" id="lastName" placeholder="Фамилия">
-    <div class="row">
-      <div><label>Дата рождения</label><input type="date" id="birthDate"></div>
-      <div><label>Дата смерти</label><input type="date" id="deathDate"></div>
+  <!-- Модальное окно редактирования -->
+  <div class="modal-overlay" id="editModal">
+    <div class="edit-panel">
+      <button class="close-modal-btn" id="closeModalBtn">&times;</button>
+      <h3 id="editTitle">Добавить человека</h3>
+      <input type="hidden" id="personId">
+      <label>Имя</label>
+      <input type="text" id="firstName" placeholder="Имя">
+      <label>Фамилия</label>
+      <input type="text" id="lastName" placeholder="Фамилия">
+      <div class="row">
+        <div><label>Дата рождения</label><input type="date" id="birthDate"></div>
+        <div><label>Дата смерти</label><input type="date" id="deathDate"></div>
+      </div>
+      <label>Пол</label>
+      <select id="gender">
+        <option value="male">Мужской</option>
+        <option value="female">Женский</option>
+        <option value="other">Другой</option>
+      </select>
+      <label>Фото</label>
+      <input type="file" id="photoInput" accept="image/*">
+      <div id="photoPreview" style="margin-bottom:10px; text-align:center;"></div>
+      <label>Заметки</label>
+      <textarea id="notes" placeholder="Дополнительная информация..."></textarea>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="glass-btn" id="savePersonBtn">Сохранить</button>
+        <button class="glass-btn" id="deletePersonBtn" style="display:none; background: rgba(220, 80, 80, 0.8);">Удалить</button>
+        <button class="glass-btn" id="cancelEditBtn" style="background: rgba(255,255,255,0.6); color: #2c3e50;">Отмена</button>
+      </div>
+      <hr style="margin:16px 0; border-color:rgba(0,0,0,0.05);">
+      <label>Добавить связь</label>
+      <div class="row">
+        <select id="relType"><option value="parent">Родитель →</option><option value="spouse">Супруг(а)</option></select>
+        <select id="relTarget"></select>
+      </div>
+      <button class="glass-btn" id="addRelationBtn" style="margin-top:8px; width:100%;">Связать</button>
     </div>
-    <label>Пол</label>
-    <select id="gender">
-      <option value="male">Мужской</option>
-      <option value="female">Женский</option>
-      <option value="other">Другой</option>
-    </select>
-    <label>Фото</label>
-    <input type="file" id="photoInput" accept="image/*">
-    <div id="photoPreview" style="margin-bottom:10px; text-align:center;"></div>
-    <label>Заметки</label>
-    <textarea id="notes" placeholder="Дополнительная информация..."></textarea>
-    <div style="display:flex; gap:8px; margin-top:8px;">
-      <button class="glass-btn primary" id="savePersonBtn">Сохранить</button>
-      <button class="glass-btn" id="deletePersonBtn" style="display:none; color:#e74c3c;">Удалить</button>
-      <button class="glass-btn" id="cancelEditBtn">Отмена</button>
-    </div>
-    <hr style="margin:16px 0; border-color:rgba(0,0,0,0.05);">
-    <label>Добавить связь</label>
-    <div class="row">
-      <select id="relType"><option value="parent">Родитель →</option><option value="spouse">Супруг(а)</option></select>
-      <select id="relTarget"></select>
-    </div>
-    <button class="glass-btn primary" id="addRelationBtn" style="margin-top:8px; width:100%;">Связать</button>
   </div>
 
   <!-- Оверлей пароля -->
@@ -296,7 +279,7 @@
       <h2 id="passTitle">Введите пароль</h2>
       <input type="text" id="loginInput" placeholder="Логин" autocomplete="username">
       <input type="password" id="passwordInput" placeholder="Пароль">
-      <button class="glass-btn primary disabled" id="passwordSubmit" style="width:100%;">Продолжить</button>
+      <button class="glass-btn disabled" id="passwordSubmit" style="width:100%;">Продолжить</button>
       <p style="margin-top:12px; font-size:0.8rem; color:#7f8c8d;">
         <a href="#" id="createNewLink">Создать новое древо</a>
       </p>
@@ -306,17 +289,16 @@
 
 <script>
   (function() {
-    // ---------- Глобальные переменные ----------
     const STORAGE_KEY = 'encryptedFamilyTree';
     let treeData = { persons: [], relationships: [] };
     let encryptionKey = false;
     let passwordSet = false;
-    let currentLogin = '';       // храним логин текущей сессии
+    let currentLogin = '';
     let focusPersonId = null;
 
-    // DOM элементы
+    // DOM
     const treeContainer = document.getElementById('treeContainer');
-    const editPanel = document.getElementById('editPanel');
+    const editModal = document.getElementById('editModal');
     const passwordOverlay = document.getElementById('passwordOverlay');
     const loginInput = document.getElementById('loginInput');
     const passwordInput = document.getElementById('passwordInput');
@@ -338,7 +320,7 @@
 
     let svgSelection = null, gMain = null, zoomBehavior = null;
 
-    // ---------- Управление состоянием кнопки Продолжить ----------
+    // --- Состояние кнопки Продолжить ---
     function updateSubmitButtonState() {
       if (passwordInput.value.trim() === '') {
         passwordSubmit.classList.add('disabled');
@@ -347,12 +329,11 @@
       }
     }
     passwordInput.addEventListener('input', updateSubmitButtonState);
-    loginInput.addEventListener('input', updateSubmitButtonState); // не обязательно, но оставим
 
-    // ---------- Шифрование с привязкой к логину ----------
+    // --- Шифрование ---
     async function deriveKey(login, password, salt = null) {
       if (!salt) salt = crypto.getRandomValues(new Uint8Array(16));
-      const combined = login + ':' + password;  // логин добавляет уникальность
+      const combined = login + ':' + password;
       const keyMaterial = await crypto.subtle.importKey(
         'raw', new TextEncoder().encode(combined), 'PBKDF2', false, ['deriveKey']
       );
@@ -369,7 +350,7 @@
       const encoded = new TextEncoder().encode(JSON.stringify(data));
       const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded);
       return {
-        login,   // сохраняем логин открыто для проверки при входе
+        login,
         payload: JSON.stringify({
           salt: Array.from(salt),
           iv: Array.from(iv),
@@ -397,19 +378,14 @@
     async function loadFromStorage(login, password) {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) throw new Error('Нет сохранённых данных');
-      const stored = JSON.parse(raw);
-      return await decryptData(stored, login, password);
+      return await decryptData(JSON.parse(raw), login, password);
     }
 
-    // ---------- Инициализация и проверка пароля ----------
+    // --- Инициализация пароля ---
     async function checkStorageAndPrompt() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        try {
-          const stored = JSON.parse(raw);
-          // Предзаполняем логин, если был сохранён
-          loginInput.value = stored.login || '';
-        } catch (e) { /* ignore */ }
+        try { loginInput.value = JSON.parse(raw).login || ''; } catch(e){}
         passTitle.textContent = 'Вход в семейное древо';
         createNewLink.style.display = 'inline';
       } else {
@@ -429,8 +405,7 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       try {
         if (raw) {
-          const stored = JSON.parse(raw);
-          treeData = await decryptData(stored, login, pass);
+          treeData = await decryptData(JSON.parse(raw), login, pass);
         } else {
           treeData = { persons: [], relationships: [] };
         }
@@ -438,7 +413,7 @@
         passwordSet = true;
         encryptionKey = true;
         passwordOverlay.style.display = 'none';
-        setTimeout(() => renderAll(), 50);
+        renderAll();
       } catch (e) {
         alert(e.message);
       }
@@ -455,35 +430,29 @@
       loginInput.value = '';
       passwordInput.value = '';
       updateSubmitButtonState();
-      editPanel.classList.remove('active');
+      closeEditPanel();
     }
 
-    // ---------- Визуализация с точечным фоном ----------
+    // --- Визуализация с точечным фоном ---
     function renderAll() {
       if (!passwordSet) return;
       treeContainer.innerHTML = '';
 
-      // Если дерево пустое, показываем сообщение
       if (treeData.persons.length === 0) {
         treeContainer.innerHTML = '<div class="empty-tree-message">Нажмите «+» чтобы добавить первого человека</div>';
         return;
       }
 
-      // Строим граф
+      // Граф
       const g = new dagre.graphlib.Graph({ directed: true });
       g.setDefaultEdgeLabel(() => ({}));
-
-      treeData.persons.forEach(p => {
-        g.setNode(p.id, {
-          label: `${p.firstName || '?'} ${p.lastName || ''}`.trim(),
-          person: p, width: 140, height: 60
-        });
-      });
-
+      treeData.persons.forEach(p => g.setNode(p.id, {
+        label: `${p.firstName || '?'} ${p.lastName || ''}`.trim(),
+        person: p, width: 140, height: 60
+      }));
       treeData.relationships.forEach(rel => {
-        if (rel.type === 'parent') {
-          g.setEdge(rel.person1, rel.person2, { lineStyle: 'parent' });
-        } else if (rel.type === 'spouse') {
+        if (rel.type === 'parent') g.setEdge(rel.person1, rel.person2, { lineStyle: 'parent' });
+        else if (rel.type === 'spouse') {
           g.setEdge(rel.person1, rel.person2, { lineStyle: 'spouse' });
           g.setEdge(rel.person2, rel.person1, { lineStyle: 'spouse' });
         }
@@ -491,20 +460,15 @@
 
       let nodesToShow = treeData.persons.map(p => p.id);
       if (focusPersonId) {
-        const ancestors = getAncestors(focusPersonId);
-        const descendants = getDescendants(focusPersonId);
-        const spouses = getSpouses(focusPersonId);
-        nodesToShow = [...new Set([focusPersonId, ...ancestors, ...descendants, ...spouses])];
+        nodesToShow = [...new Set([focusPersonId, ...getAncestors(focusPersonId), ...getDescendants(focusPersonId), ...getSpouses(focusPersonId)])];
       }
 
       const filteredNodes = nodesToShow.filter(id => g.hasNode(id));
       const filteredEdges = g.edges().filter(e => nodesToShow.includes(e.v) && nodesToShow.includes(e.w));
-
       const subGraph = new dagre.graphlib.Graph({ directed: true });
       subGraph.setDefaultEdgeLabel(() => ({}));
       filteredNodes.forEach(id => subGraph.setNode(id, g.node(id)));
       filteredEdges.forEach(e => subGraph.setEdge(e.v, e.w, g.edge(e)));
-
       dagre.layout(subGraph, { rankdir: 'TB', nodesep: 40, ranksep: 60, marginx: 30, marginy: 30 });
 
       const width = treeContainer.clientWidth || 800;
@@ -514,7 +478,7 @@
         .attr('width', width)
         .attr('height', height);
 
-      // ----- Точечный фон через паттерн -----
+      // Defs с паттерном точек и маркером
       const defs = svgSelection.append('defs');
       defs.append('pattern')
         .attr('id', 'dotPattern')
@@ -522,30 +486,37 @@
         .attr('width', 20)
         .attr('height', 20)
         .append('circle')
-        .attr('cx', 10)
-        .attr('cy', 10)
-        .attr('r', 1.2)
-        .attr('fill', 'rgba(44, 62, 80, 0.2)');
-      
-      // Фон с точками (за gMain)
-      svgSelection.append('rect')
-        .attr('width', '100%')
-        .attr('height', '100%')
-        .attr('fill', 'url(#dotPattern)');
+        .attr('cx', 10).attr('cy', 10).attr('r', 1.2)
+        .attr('fill', 'rgba(44, 62, 80, 0.25)');
 
-      // Zoom behavior
-      zoomBehavior = d3.zoom()
-        .scaleExtent([0.3, 3])
-        .on('zoom', (event) => {
-          gMain.attr('transform', event.transform);
-        });
+      defs.append('marker')
+        .attr('id', 'arrowhead')
+        .attr('viewBox', '0 0 10 10')
+        .attr('refX', 10).attr('refY', 5)
+        .attr('markerWidth', 6).attr('markerHeight', 6)
+        .attr('orient', 'auto')
+        .append('path')
+        .attr('d', 'M 0 0 L 10 5 L 0 10 Z')
+        .attr('fill', '#8395a7');
 
+      // Zoom
+      zoomBehavior = d3.zoom().scaleExtent([0.3, 3]).on('zoom', (event) => {
+        gMain.attr('transform', event.transform);
+      });
       svgSelection.call(zoomBehavior);
       svgSelection.on('click', (event) => {
         if (event.target === svgSelection.node()) closeEditPanel();
       });
 
       gMain = svgSelection.append('g');
+
+      // Точечный фон внутри gMain – двигается с зумом
+      gMain.append('rect')
+        .attr('width', 10000)
+        .attr('height', 10000)
+        .attr('x', -5000)
+        .attr('y', -5000)
+        .attr('fill', 'url(#dotPattern)');
 
       // Рёбра
       const edgesLayer = gMain.append('g');
@@ -562,23 +533,12 @@
         }
       });
 
-      // Маркер стрелки
-      defs.append('marker')
-        .attr('id', 'arrowhead')
-        .attr('viewBox', '0 0 10 10')
-        .attr('refX', 10).attr('refY', 5)
-        .attr('markerWidth', 6).attr('markerHeight', 6)
-        .attr('orient', 'auto')
-        .append('path')
-        .attr('d', 'M 0 0 L 10 5 L 0 10 Z')
-        .attr('fill', '#8395a7');
-
       // Узлы
       const nodesLayer = gMain.append('g');
       subGraph.nodes().forEach(nodeId => {
         const node = subGraph.node(nodeId);
         const person = node.person;
-        const group = nodesLayer.append('g')
+        const card = nodesLayer.append('g')
           .attr('class', 'node-card')
           .attr('transform', `translate(${node.x - node.width/2}, ${node.y - node.height/2})`)
           .on('click', (event) => {
@@ -586,27 +546,27 @@
             openEditPanel(person.id);
           });
 
-        group.append('rect')
+        card.append('rect')
           .attr('width', node.width)
           .attr('height', node.height)
           .attr('rx', 14)
-          .attr('fill', 'rgba(255, 255, 255, 0.75)')
+          .attr('fill', 'rgba(255, 255, 255, 0.85)')
           .attr('stroke', 'rgba(255,255,255,0.9)')
           .attr('stroke-width', 2);
 
         if (person.photo) {
-          group.append('image')
+          card.append('image')
             .attr('x', 6).attr('y', 6)
             .attr('width', 28).attr('height', 28)
             .attr('clip-path', 'circle(14px at 14px 14px)')
             .attr('href', person.photo);
         }
 
-        group.append('text')
+        card.append('text')
           .attr('x', person.photo ? 40 : 12).attr('y', 24)
-          .attr('fill', '#2c3e50').attr('font-size', '12px')
-          .attr('font-weight', '500').text(person.firstName || '???');
-        group.append('text')
+          .attr('fill', '#2c3e50').attr('font-size', '12px').attr('font-weight', '500')
+          .text(person.firstName || '???');
+        card.append('text')
           .attr('x', person.photo ? 40 : 12).attr('y', 42)
           .attr('fill', '#7f8c8d').attr('font-size', '10px')
           .text(person.lastName || '');
@@ -623,54 +583,45 @@
             maxY: Math.max(acc.maxY, n.y + n.height/2)
           };
         }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
-
         const graphWidth = bounds.maxX - bounds.minX + 80;
         const graphHeight = bounds.maxY - bounds.minY + 80;
         const scale = Math.min(width / graphWidth, height / graphHeight, 1.2);
         const centerX = (bounds.minX + bounds.maxX) / 2;
         const centerY = (bounds.minY + bounds.maxY) / 2;
-
-        const initialTransform = d3.zoomIdentity
-          .translate(width/2, height/2)
-          .scale(scale)
-          .translate(-centerX, -centerY);
-
-        svgSelection.call(zoomBehavior.transform, initialTransform);
+        const transform = d3.zoomIdentity.translate(width/2, height/2).scale(scale).translate(-centerX, -centerY);
+        svgSelection.call(zoomBehavior.transform, transform);
       }
     }
 
-    // ---------- Вспомогательные функции обхода ----------
-    function getAncestors(personId) {
-      const ancestors = new Set();
-      const stack = [personId];
+    // Обход
+    function getAncestors(id) {
+      const set = new Set(), stack = [id];
       while (stack.length) {
         const curr = stack.pop();
         treeData.relationships.filter(r => r.type === 'parent' && r.person2 === curr).forEach(r => {
-          if (!ancestors.has(r.person1)) { ancestors.add(r.person1); stack.push(r.person1); }
+          if (!set.has(r.person1)) { set.add(r.person1); stack.push(r.person1); }
         });
       }
-      return Array.from(ancestors);
+      return [...set];
     }
-    function getDescendants(personId) {
-      const descendants = new Set();
-      const stack = [personId];
+    function getDescendants(id) {
+      const set = new Set(), stack = [id];
       while (stack.length) {
         const curr = stack.pop();
         treeData.relationships.filter(r => r.type === 'parent' && r.person1 === curr).forEach(r => {
-          if (!descendants.has(r.person2)) { descendants.add(r.person2); stack.push(r.person2); }
+          if (!set.has(r.person2)) { set.add(r.person2); stack.push(r.person2); }
         });
       }
-      return Array.from(descendants);
+      return [...set];
     }
-    function getSpouses(personId) {
+    function getSpouses(id) {
       return treeData.relationships
-        .filter(r => r.type === 'spouse' && (r.person1 === personId || r.person2 === personId))
-        .map(r => r.person1 === personId ? r.person2 : r.person1);
+        .filter(r => r.type === 'spouse' && (r.person1 === id || r.person2 === id))
+        .map(r => r.person1 === id ? r.person2 : r.person1);
     }
 
-    // ---------- Панель редактирования ----------
+    // --- Модальное окно ---
     function openEditPanel(personId = null) {
-      editPanel.classList.add('active');
       if (personId) {
         const person = treeData.persons.find(p => p.id === personId);
         if (!person) return;
@@ -697,9 +648,12 @@
         document.getElementById('editTitle').textContent = 'Добавить человека';
       }
       populateRelationTargets(personId);
+      editModal.classList.add('active');
     }
 
-    function closeEditPanel() { editPanel.classList.remove('active'); }
+    function closeEditPanel() {
+      editModal.classList.remove('active');
+    }
 
     function populateRelationTargets(excludeId) {
       relTargetSelect.innerHTML = '';
@@ -724,7 +678,7 @@
 
     async function savePerson() {
       const id = personIdInput.value;
-      const personData = {
+      const data = {
         firstName: firstNameInput.value.trim(),
         lastName: lastNameInput.value.trim(),
         birthDate: birthDateInput.value,
@@ -734,11 +688,11 @@
         photo: photoPreview.querySelector('img')?.src || ''
       };
       if (id) {
-        const index = treeData.persons.findIndex(p => p.id === id);
-        if (index !== -1) treeData.persons[index] = { ...treeData.persons[index], ...personData };
+        const idx = treeData.persons.findIndex(p => p.id === id);
+        if (idx !== -1) treeData.persons[idx] = { ...treeData.persons[idx], ...data };
       } else {
         const newId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-        treeData.persons.push({ id: newId, ...personData });
+        treeData.persons.push({ id: newId, ...data });
       }
       await saveToStorage();
       closeEditPanel();
@@ -761,76 +715,65 @@
       const sourceId = personIdInput.value;
       const targetId = relTargetSelect.value;
       const type = relTypeSelect.value;
-      if (!sourceId || !targetId) return alert('Выберите человека для связи');
-      if (sourceId === targetId) return alert('Нельзя связать с самим собой');
+      if (!sourceId || !targetId) return alert('Выберите человека');
+      if (sourceId === targetId) return alert('Нельзя связать самого с собой');
       const exists = treeData.relationships.some(r =>
         (r.type === type && r.person1 === sourceId && r.person2 === targetId) ||
         (type === 'spouse' && r.type === 'spouse' && ((r.person1 === sourceId && r.person2 === targetId) || (r.person1 === targetId && r.person2 === sourceId)))
       );
-      if (exists) return alert('Такая связь уже существует');
+      if (exists) return alert('Такая связь уже есть');
       treeData.relationships.push({ type, person1: sourceId, person2: targetId });
       await saveToStorage();
       closeEditPanel();
       renderAll();
     }
 
-    // ---------- Обработчики кнопок и панели инструментов ----------
+    // --- Обработчики кнопок ---
     document.getElementById('savePersonBtn').addEventListener('click', savePerson);
     document.getElementById('deletePersonBtn').addEventListener('click', deletePerson);
     document.getElementById('cancelEditBtn').addEventListener('click', closeEditPanel);
     document.getElementById('addRelationBtn').addEventListener('click', addRelation);
+    document.getElementById('closeModalBtn').addEventListener('click', closeEditPanel);
+    // Клик вне панели закрывает
+    editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditPanel(); });
 
-    // Новая кнопка "+" в шапке
     document.getElementById('addPersonBtn').addEventListener('click', () => openEditPanel(null));
 
-    document.getElementById('focusRootBtn').addEventListener('click', () => {
-      focusPersonId = null;
-      renderAll();
-    });
-
+    document.getElementById('focusRootBtn').addEventListener('click', () => { focusPersonId = null; renderAll(); });
     searchInput.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      if (!query) { focusPersonId = null; renderAll(); return; }
-      const found = treeData.persons.find(p =>
-        `${p.firstName} ${p.lastName}`.toLowerCase().includes(query)
-      );
+      const q = e.target.value.toLowerCase();
+      if (!q) { focusPersonId = null; renderAll(); return; }
+      const found = treeData.persons.find(p => `${p.firstName} ${p.lastName}`.toLowerCase().includes(q));
       if (found) { focusPersonId = found.id; renderAll(); }
     });
-
     document.getElementById('lockBtn').addEventListener('click', lockApp);
-
     document.getElementById('exportBtn').addEventListener('click', () => {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) return alert('Нет данных');
-      const blob = new Blob([stored], {type: 'application/json'});
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (!data) return alert('Нет данных');
+      const blob = new Blob([data], {type: 'application/json'});
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'family_tree_encrypted.json';
       a.click();
     });
-
     document.getElementById('importBtn').addEventListener('click', () => {
       const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
+      input.type = 'file'; input.accept = '.json';
       input.onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (ev) => {
           localStorage.setItem(STORAGE_KEY, ev.target.result);
-          lockApp(); // попросит заново ввести логин/пароль
+          lockApp();
         };
         reader.readAsText(file);
       };
       input.click();
     });
+    document.getElementById('undoBtn').addEventListener('click', () => alert('Отмена в разработке'));
+    document.getElementById('redoBtn').addEventListener('click', () => alert('Повтор в разработке'));
 
-    // Undo/Redo пока заглушки
-    document.getElementById('undoBtn').addEventListener('click', () => alert('Функция отмены в разработке'));
-    document.getElementById('redoBtn').addEventListener('click', () => alert('Функция повтора в разработке'));
-
-    // Оверлей пароля
     passwordSubmit.addEventListener('click', handlePasswordSubmit);
     passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handlePasswordSubmit(); });
     loginInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') passwordInput.focus(); });
