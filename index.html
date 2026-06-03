@@ -11,248 +11,97 @@
     body {
       font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
+      min-height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden;
     }
     .app-container {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background: rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      position: relative;
+      width: 100vw; height: 100vh; display: flex; flex-direction: column;
+      background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      overflow: hidden; position: relative;
     }
     .glass-header {
-      background: rgba(255, 255, 255, 0.4);
-      backdrop-filter: blur(10px);
-      padding: 12px 24px 8px;
-      display: flex;
-      flex-direction: column;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-      flex-shrink: 0;
-      gap: 8px;
+      background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px); padding: 12px 24px 8px;
+      display: flex; flex-direction: column; border-bottom: 1px solid rgba(255, 255, 255, 0.5); flex-shrink: 0; gap: 8px;
     }
-    .header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .header-top h1 {
-      font-weight: 300;
-      font-size: 1.8rem;
-      color: #2c3e50;
-      letter-spacing: 1px;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    .header-top h1 { font-weight: 300; font-size: 1.8rem; color: #2c3e50; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
     .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .header-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-bottom: 4px; }
     .glass-btn {
-      background: rgba(255, 255, 255, 0.5);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.6);
-      border-radius: 16px;
-      padding: 10px 18px;
-      color: #2c3e50;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: 500;
-      white-space: nowrap;
+      background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 16px; padding: 10px 18px; color: #2c3e50; font-size: 0.9rem; cursor: pointer;
+      transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; white-space: nowrap;
     }
-    .glass-btn:hover {
-      background: rgba(255, 255, 255, 0.75);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      transform: translateY(-1px);
-    }
+    .glass-btn:hover { background: rgba(255, 255, 255, 0.75); box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-1px); }
     .glass-btn i { font-size: 1rem; }
-    .glass-btn.primary {
-      background: rgba(100, 149, 237, 0.85);
-      border-color: rgba(255, 255, 255, 0.9);
-      color: white;
-      font-weight: 600;
-    }
+    .glass-btn.primary { background: rgba(100, 149, 237, 0.85); border-color: rgba(255,255,255,0.9); color: white; font-weight: 600; }
     .glass-btn.primary:hover { background: rgba(70, 130, 220, 0.95); }
-    .glass-btn.disabled {
-      background: rgba(100, 149, 237, 0.3);
-      pointer-events: none;
-      color: rgba(255,255,255,0.6);
-      border-color: rgba(255,255,255,0.3);
-    }
+    .glass-btn.disabled { background: rgba(100, 149, 237, 0.3); pointer-events: none; color: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.3); }
     .search-box {
-      background: rgba(255, 255, 255, 0.4);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.6);
-      border-radius: 16px;
-      padding: 8px 16px;
-      color: #2c3e50;
-      font-size: 0.95rem;
-      width: 200px;
-      outline: none;
+      background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 16px; padding: 8px 16px; color: #2c3e50; font-size: 0.95rem; width: 200px; outline: none;
     }
     .search-box::placeholder { color: #7f8c8d; }
-    .tree-area {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      background: rgba(255, 255, 255, 0.05);
-      cursor: grab;
-    }
+    .tree-area { flex: 1; position: relative; overflow: hidden; background: rgba(255,255,255,0.05); cursor: grab; }
     .tree-area:active { cursor: grabbing; }
     .tree-area svg { width: 100%; height: 100%; }
     .modal-overlay {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 15;
-      visibility: hidden;
-      opacity: 0;
-      transition: all 0.3s ease;
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); display: flex; justify-content: center;
+      align-items: center; z-index: 15; visibility: hidden; opacity: 0; transition: all 0.3s ease;
     }
     .modal-overlay.active { visibility: visible; opacity: 1; }
     .edit-panel, .info-panel {
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(25px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      border-radius: 28px;
-      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
-      padding: 28px;
-      width: 420px;
-      max-width: 90vw;
-      max-height: 85vh;
-      overflow-y: auto;
-      position: relative;
+      background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.5);
+      border-radius: 28px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); padding: 28px; width: 420px;
+      max-width: 90vw; max-height: 85vh; overflow-y: auto; position: relative;
     }
     .edit-panel h3 { margin-bottom: 18px; font-weight: 400; color: #2c3e50; }
     .edit-panel label { display: block; margin-bottom: 6px; font-size: 0.8rem; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; }
     .edit-panel input, .edit-panel textarea {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(5px);
-      border: 1px solid rgba(255, 255, 255, 0.9);
-      border-radius: 12px;
-      padding: 10px 14px;
-      margin-bottom: 14px;
-      font-size: 0.95rem;
-      outline: none;
-      color: #2c3e50;
+      width: 100%; background: rgba(255,255,255,0.7); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.9);
+      border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; font-size: 0.95rem; outline: none; color: #2c3e50;
     }
     .edit-panel input[type="file"] { padding: 6px; }
     .edit-panel textarea { min-height: 60px; }
     .edit-panel .row { display: flex; gap: 10px; }
     .edit-panel .row > * { flex: 1; }
-    .close-modal-btn {
-      position: absolute;
-      top: 12px; right: 16px;
-      background: none;
-      border: none;
-      font-size: 1.8rem;
-      color: #7f8c8d;
-      cursor: pointer;
-      line-height: 1;
-    }
+    .close-modal-btn { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 1.8rem; color: #7f8c8d; cursor: pointer; }
     .gender-toggle { display: flex; gap: 12px; margin-bottom: 14px; }
     .gender-btn {
-      flex: 1; padding: 10px; border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.6);
-      background: rgba(255,255,255,0.4);
-      color: #2c3e50; font-weight: 500; cursor: pointer;
+      flex: 1; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.4); color: #2c3e50; cursor: pointer;
     }
-    .gender-btn.active {
-      background: rgba(100, 149, 237, 0.85);
-      color: white; border-color: transparent; font-weight: 600;
-    }
+    .gender-btn.active { background: rgba(100, 149, 237, 0.85); color: white; border-color: transparent; font-weight: 600; }
     .node-card { cursor: pointer; transition: filter 0.2s; }
     .node-card:hover { filter: brightness(1.03); }
     .node-card.selected rect { stroke: #6495ED; stroke-width: 3; }
-    .port {
-      cursor: crosshair;
-      fill: rgba(100, 149, 237, 0.7);
-      stroke: white;
-      stroke-width: 2;
+    .port { cursor: crosshair; fill: rgba(100,149,237,0.7); stroke: white; stroke-width: 2; }
+    .port:hover { fill: rgba(100,149,237,1); }
+    /* Кнопки действий внутри карточки */
+    .action-icons { visibility: hidden; pointer-events: all; }
+    .action-icons foreignObject { overflow: visible; pointer-events: all; }
+    .action-icon-btn {
+      background: rgba(255,255,255,0.7); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.8);
+      border-radius: 10px; padding: 6px 10px; color: #2c3e50; font-size: 14px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 4px; transition: 0.2s; pointer-events: all; text-decoration: none;
     }
-    .port:hover { fill: rgba(100, 149, 237, 1); }
-
-    /* Иконки действий внутри карточки */
-    .action-icons {
-      visibility: hidden;
-    }
-    .action-icon-bg {
-      fill: rgba(255,255,255,0.7);
-      stroke: rgba(0,0,0,0.08);
-      stroke-width: 1;
-      rx: 8;
-    }
-    .action-icon-text {
-      font-size: 14px;
-      font-family: 'Segoe UI', 'Font Awesome 6 Free';
-      font-weight: 900;
-      fill: #2c3e50;
-      text-anchor: middle;
-      dominant-baseline: central;
-      cursor: pointer;
-    }
-    .action-icon-text.delete { fill: #c0392b; }
-
-    .empty-tree-message {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 1.2rem;
-      color: rgba(44, 62, 80, 0.5);
-      pointer-events: none;
-      text-align: center;
-    }
+    .action-icon-btn:hover { background: rgba(255,255,255,0.9); }
+    .action-icon-btn.delete { background: rgba(220,80,80,0.15); color: #c0392b; }
+    .action-icon-btn.delete:hover { background: rgba(220,80,80,0.3); }
+    .empty-tree-message { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 1.2rem; color: rgba(44,62,80,0.5); pointer-events: none; text-align: center; }
     .password-overlay {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(15px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 20;
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.3);
+      backdrop-filter: blur(15px); display: flex; justify-content: center; align-items: center; z-index: 20;
     }
     .password-dialog {
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(25px);
-      border-radius: 28px;
-      padding: 32px;
-      max-width: 360px;
-      width: 90%;
-      text-align: center;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      background: rgba(255,255,255,0.8); backdrop-filter: blur(25px); border-radius: 28px; padding: 32px;
+      max-width: 360px; width: 90%; text-align: center; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     }
     .password-dialog h2 { font-weight: 300; margin-bottom: 20px; color: #2c3e50; }
     .password-dialog input {
-      width: 100%;
-      margin-bottom: 16px;
-      background: rgba(255, 255, 255, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.8);
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 1rem;
-      outline: none;
+      width: 100%; margin-bottom: 16px; background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.8);
+      border-radius: 12px; padding: 12px; font-size: 1rem; outline: none;
     }
     .password-dialog input:last-of-type { margin-bottom: 20px; }
     @media (max-width: 700px) {
@@ -427,9 +276,7 @@
     }
     function saveToStorage() {
       if (!currentLogin || !currentPassword) return;
-      encryptData(treeData, currentLogin, currentPassword)
-        .then(enc => localStorage.setItem(STORAGE_KEY, JSON.stringify(enc)))
-        .catch(e => console.error('Ошибка сохранения', e));
+      encryptData(treeData, currentLogin, currentPassword).then(enc => localStorage.setItem(STORAGE_KEY, JSON.stringify(enc))).catch(console.error);
     }
 
     // ---------- Вход ----------
@@ -437,47 +284,28 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         try { loginInput.value = JSON.parse(raw).login || ''; } catch(e){}
-        passTitle.textContent = 'Вход в семейное древо';
-        createNewLink.style.display = 'inline';
+        passTitle.textContent = 'Вход в семейное древо'; createNewLink.style.display = 'inline';
       } else {
-        passTitle.textContent = 'Создайте новое древо';
-        createNewLink.style.display = 'none';
+        passTitle.textContent = 'Создайте новое древо'; createNewLink.style.display = 'none';
       }
-      passwordInput.value = '';
-      updateSubmitButtonState();
-      passwordOverlay.style.display = 'flex';
-      loginInput.focus();
+      passwordInput.value = ''; updateSubmitButtonState(); passwordOverlay.style.display = 'flex'; loginInput.focus();
     }
     async function handlePasswordSubmit() {
-      const login = loginInput.value.trim();
-      const pass = passwordInput.value.trim();
+      const login = loginInput.value.trim(), pass = passwordInput.value.trim();
       if (!login || !pass) return alert('Введите логин и пароль');
       const raw = localStorage.getItem(STORAGE_KEY);
       try {
         if (raw) treeData = await decryptData(JSON.parse(raw), login, pass);
         else treeData = { persons: [], relationships: [] };
-        currentLogin = login;
-        currentPassword = pass;
-        passwordSet = true;
-        passwordOverlay.style.display = 'none';
-        loadNodePositionsFromData();
-        renderAll();
+        currentLogin = login; currentPassword = pass; passwordSet = true;
+        passwordOverlay.style.display = 'none'; loadNodePositionsFromData(); renderAll();
       } catch (e) { alert(e.message); }
     }
     function lockApp() {
-      passwordSet = false;
-      currentLogin = '';
-      currentPassword = '';
-      treeData = { persons: [], relationships: [] };
-      nodePositions = {};
-      passwordOverlay.style.display = 'flex';
-      passTitle.textContent = 'Вход в семейное древо';
-      createNewLink.style.display = 'inline';
-      loginInput.value = '';
-      passwordInput.value = '';
-      updateSubmitButtonState();
-      closeEditModal();
-      clearSelection();
+      passwordSet = false; currentLogin = ''; currentPassword = ''; treeData = { persons: [], relationships: [] };
+      nodePositions = {}; passwordOverlay.style.display = 'flex'; passTitle.textContent = 'Вход в семейное древо';
+      createNewLink.style.display = 'inline'; loginInput.value = ''; passwordInput.value = ''; updateSubmitButtonState();
+      closeEditModal(); clearSelection();
     }
 
     // Позиции
@@ -491,9 +319,7 @@
         saveToStorage();
       }
     }
-    function saveNodePositionsToData() {
-      treeData.persons.forEach(p => { if (nodePositions[p.id]) { p.x = nodePositions[p.id].x; p.y = nodePositions[p.id].y; } });
-    }
+    function saveNodePositionsToData() { treeData.persons.forEach(p => { if (nodePositions[p.id]) { p.x = nodePositions[p.id].x; p.y = nodePositions[p.id].y; } }); }
 
     // Роли
     function findRootPerson() { return treeData.persons.find(p => p.isRoot); }
@@ -620,7 +446,6 @@
         .attr('fill', 'url(#dotPattern)');
 
       const edgesLayer = gMain.append('g');
-      // Функция для перерисовки всех линий
       function redrawEdges() {
         edgesLayer.selectAll('*').remove();
         treeData.relationships.forEach(rel => {
@@ -674,34 +499,34 @@
           .attr('fill', '#7f8c8d').attr('font-size', '10px')
           .text(getDisplayRole(person));
 
-        // Кнопки действий (изначально скрыты)
+        // Кнопки действий
         const actionGroup = card.append('g')
           .attr('class', 'action-icons')
-          .attr('transform', `translate(${cardWidth + 8}, ${cardHeight/2 - 18})`);
+          .attr('transform', `translate(${cardWidth + 8}, ${cardHeight/2 - 15})`);
 
-        // Фон для кнопок
-        actionGroup.append('rect')
-          .attr('width', 80).attr('height', 36).attr('rx', 8)
-          .attr('fill', 'rgba(255,255,255,0.7)')
-          .attr('stroke', 'rgba(0,0,0,0.08)');
+        const fo = actionGroup.append('foreignObject')
+          .attr('width', 80)
+          .attr('height', 30)
+          .attr('pointer-events', 'all');
 
-        // Кнопка редактирования
-        actionGroup.append('text')
-          .attr('x', 20).attr('y', 18)
-          .attr('class', 'action-icon-text')
-          .text('\uf044') // иконка карандаша
-          .style('font-family', 'Font Awesome 6 Free')
-          .style('font-weight', '900')
-          .on('click', () => { if (selectedPersonId === person.id) openEditModal(person.id); });
+        const div = fo.append('xhtml:div')
+          .style('display', 'flex')
+          .style('gap', '6px')
+          .style('pointer-events', 'all');
 
-        // Кнопка удаления
-        actionGroup.append('text')
-          .attr('x', 60).attr('y', 18)
-          .attr('class', 'action-icon-text delete')
-          .text('\uf2ed') // иконка корзины
-          .style('font-family', 'Font Awesome 6 Free')
-          .style('font-weight', '900')
-          .on('click', () => { if (selectedPersonId === person.id) deleteSelectedPerson(); });
+        div.append('button')
+          .attr('class', 'action-icon-btn')
+          .html('<i class="fas fa-pencil-alt"></i>')
+          .on('click', () => {
+            if (selectedPersonId === person.id) openEditModal(person.id);
+          });
+
+        div.append('button')
+          .attr('class', 'action-icon-btn delete')
+          .html('<i class="fas fa-trash-alt"></i>')
+          .on('click', () => {
+            if (selectedPersonId === person.id) deleteSelectedPerson();
+          });
 
         card.on('click', function(event) {
           event.stopPropagation();
@@ -758,7 +583,7 @@
         portUp.call(portDrag);
         portDown.call(portDrag);
 
-        // Перетаскивание самой карточки с обновлением линий в реальном времени
+        // Перетаскивание карточки
         const cardDrag = d3.drag()
           .on('start', function(event) {
             svg.on('.zoom', null);
@@ -767,21 +592,15 @@
           .on('drag', function(event) {
             window.draggedCard.moved = true;
             const coords = d3.pointer(event, gMain.node());
-            const newX = coords[0] - cardWidth/2;
-            const newY = coords[1] - cardHeight/2;
-            card.attr('transform', `translate(${newX}, ${newY})`);
-            // Обновляем позицию в реальном времени
-            const centerX = coords[0];
-            const centerY = coords[1];
-            nodePositions[person.id] = { x: centerX, y: centerY };
-            redrawEdges(); // перерисовываем линии сразу
+            card.attr('transform', `translate(${coords[0] - cardWidth/2}, ${coords[1] - cardHeight/2})`);
+            nodePositions[person.id] = { x: coords[0], y: coords[1] };
+            redrawEdges();
           })
           .on('end', function(event) {
             svg.call(zoomBehavior);
             const dc = window.draggedCard;
             if (!dc) return;
             if (dc.moved) {
-              // Финальное сохранение позиции
               saveNodePositionsToData();
             } else {
               selectPerson(dc.id);
@@ -803,7 +622,6 @@
     }
 
     function selectPerson(personId) {
-      // Снять выделение со всех
       d3.selectAll('.node-card').classed('selected', false);
       d3.selectAll('.action-icons').style('visibility', 'hidden');
       if (selectedPersonId === personId) {
@@ -811,22 +629,10 @@
         return;
       }
       selectedPersonId = personId;
-      // Найти карточку и выделить её
-      d3.selectAll('.node-card').each(function() {
-        // Здесь мы не можем легко получить id, поэтому используем другой способ:
-        // При рендеринге мы должны были запомнить id в datum.
-        // Но мы не привязали данные. Сделаем привязку через data.
-      });
-      // Поскольку мы не использовали data binding, проще найти по атрибуту или перебрать все группы.
-      // Мы можем при рендеринге записывать id в свойство элемента, но проще сейчас заново установить класс selected на нужной карточке.
-      // У нас есть ссылка на card? Нет, но мы можем заново пробежаться по всем node-card и сравнить их с id человека по какому-то признаку.
-      // Проще всего: сохранить ссылку на card при создании, но это усложнит. Пока используем поиск по data-person-id порта.
-      // Но можно и так: выделим карточку, у которой любой потомок имеет атрибут data-person-id = personId.
       const cardSelection = d3.selectAll('.node-card').filter(function() {
         return d3.select(this).select(`[data-person-id="${personId}"]`).size() > 0;
       });
       cardSelection.classed('selected', true);
-      // Показать action-icons внутри этой карточки
       cardSelection.select('.action-icons').style('visibility', 'visible');
     }
 
@@ -978,14 +784,14 @@
       const target = treeData.persons.find(p => p.id === targetId);
       if (!source || !target) return;
 
-      document.getElementById('relationTitle').textContent = `Связь: ${source.firstName || '?'} → ${target.firstName || '?'}`;
+      document.getElementById('relationTitle').textContent = `Связь: ${source.firstName || '?'} ↔ ${target.firstName || '?'}`;
       const div = document.getElementById('relationButtons');
       div.innerHTML = '';
 
       const options = [
-        { text: `${source.firstName || '?'} родитель → ${target.firstName || '?'} ребёнок`, type: 'parent', dir: 1 },
-        { text: `${target.firstName || '?'} родитель → ${source.firstName || '?'} ребёнок`, type: 'parent', dir: 2 },
-        { text: 'Супруги', type: 'spouse', dir: 0 }
+        { text: `${source.firstName || '?'} – родитель, ${target.firstName || '?'} – ребёнок`, type: 'parent', parentId: sourceId, childId: targetId },
+        { text: `${target.firstName || '?'} – родитель, ${source.firstName || '?'} – ребёнок`, type: 'parent', parentId: targetId, childId: sourceId },
+        { text: 'Супруги', type: 'spouse', parentId: null, childId: null }
       ];
       options.forEach(opt => {
         const btn = document.createElement('button');
@@ -993,8 +799,7 @@
         btn.textContent = opt.text;
         btn.onclick = () => {
           if (opt.type === 'parent') {
-            if (opt.dir === 1) addRelation(sourceId, targetId, 'parent');
-            else addRelation(targetId, sourceId, 'parent');
+            addRelation(opt.parentId, opt.childId, 'parent');
           } else {
             addRelation(sourceId, targetId, 'spouse');
           }
