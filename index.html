@@ -31,8 +31,6 @@
       overflow: hidden;
       position: relative;
     }
-
-    /* ----- Шапка (два ряда) ----- */
     .glass-header {
       background: rgba(255, 255, 255, 0.4);
       backdrop-filter: blur(10px);
@@ -60,28 +58,15 @@
       align-items: center;
       gap: 8px;
     }
-    .header-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .header-tools {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-      padding-bottom: 4px;
-    }
-
-    /* ---------- Кнопки ---------- */
+    .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .header-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-bottom: 4px; }
     .glass-btn {
-      background: rgba(255, 255, 255, 0.5);   /* белая полупрозрачная */
+      background: rgba(255, 255, 255, 0.5);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.6);
       border-radius: 16px;
       padding: 10px 18px;
-      color: #2c3e50;                        /* тёмный текст */
+      color: #2c3e50;
       font-size: 0.9rem;
       cursor: pointer;
       transition: all 0.3s ease;
@@ -97,27 +82,19 @@
       transform: translateY(-1px);
     }
     .glass-btn i { font-size: 1rem; }
-
-    /* Только важные кнопки делаем ярко-синими */
     .glass-btn.primary {
       background: rgba(100, 149, 237, 0.85);
       border-color: rgba(255, 255, 255, 0.9);
       color: white;
       font-weight: 600;
     }
-    .glass-btn.primary:hover {
-      background: rgba(70, 130, 220, 0.95);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-
-    /* Кнопка «Продолжить» может быть неактивной */
+    .glass-btn.primary:hover { background: rgba(70, 130, 220, 0.95); }
     .glass-btn.disabled {
       background: rgba(100, 149, 237, 0.3);
       pointer-events: none;
       color: rgba(255,255,255,0.6);
       border-color: rgba(255,255,255,0.3);
     }
-
     .search-box {
       background: rgba(255, 255, 255, 0.4);
       backdrop-filter: blur(10px);
@@ -130,8 +107,6 @@
       outline: none;
     }
     .search-box::placeholder { color: #7f8c8d; }
-
-    /* ----- Область дерева ----- */
     .tree-area {
       flex: 1;
       position: relative;
@@ -141,8 +116,6 @@
     }
     .tree-area:active { cursor: grabbing; }
     .tree-area svg { width: 100%; height: 100%; }
-
-    /* ----- Модальное окно редактирования (по центру, с блюром) ----- */
     .modal-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -157,10 +130,7 @@
       opacity: 0;
       transition: all 0.3s ease;
     }
-    .modal-overlay.active {
-      visibility: visible;
-      opacity: 1;
-    }
+    .modal-overlay.active { visibility: visible; opacity: 1; }
     .edit-panel {
       background: rgba(255, 255, 255, 0.8);
       backdrop-filter: blur(25px);
@@ -202,11 +172,8 @@
       cursor: pointer;
       line-height: 1;
     }
-
-    /* ----- Карточка человека ----- */
     .node-card { cursor: pointer; transition: all 0.2s; }
     .node-card:hover { filter: brightness(1.05); transform: scale(1.02); }
-
     .empty-tree-message {
       position: absolute;
       top: 50%; left: 50%;
@@ -216,8 +183,6 @@
       pointer-events: none;
       text-align: center;
     }
-
-    /* ----- Оверлей пароля (старое окно) ----- */
     .password-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -250,7 +215,6 @@
       outline: none;
     }
     .password-dialog input:last-of-type { margin-bottom: 20px; }
-
     @media (max-width: 700px) {
       .edit-panel { width: 95vw; }
       .header-top h1 { font-size: 1.2rem; }
@@ -266,7 +230,6 @@
       <h1><i class="fas fa-tree"></i> Family Roots</h1>
       <div class="header-actions">
         <input type="text" class="search-box" placeholder="Поиск..." id="searchInput">
-        <!-- Белые кнопки с иконками -->
         <button class="glass-btn" id="focusRootBtn" title="Показать всё древо"><i class="fas fa-home"></i></button>
         <button class="glass-btn" id="exportBtn" title="Скачать зашифрованное древо"><i class="fas fa-download"></i></button>
         <button class="glass-btn" id="importBtn" title="Загрузить древо из файла"><i class="fas fa-upload"></i></button>
@@ -274,7 +237,6 @@
       </div>
     </div>
     <div class="header-tools">
-      <!-- Только "Добавить человека" ярко-синяя -->
       <button class="glass-btn primary" id="addPersonBtn"><i class="fas fa-plus"></i> Добавить человека</button>
       <button class="glass-btn" id="undoBtn" title="Отменить"><i class="fas fa-undo"></i></button>
       <button class="glass-btn" id="redoBtn" title="Повторить"><i class="fas fa-redo"></i></button>
@@ -282,10 +244,9 @@
     </div>
   </header>
 
-  <!-- Область дерева -->
   <div class="tree-area" id="treeContainer"></div>
 
-  <!-- Модальное окно редактирования (по центру, с блюром) -->
+  <!-- Модальное окно редактирования -->
   <div class="modal-overlay" id="editModal">
     <div class="edit-panel">
       <button class="close-modal-btn" id="closeModalBtn">&times;</button>
@@ -325,7 +286,7 @@
     </div>
   </div>
 
-  <!-- Оверлей пароля / логина (старое окно) -->
+  <!-- Оверлей входа -->
   <div class="password-overlay" id="passwordOverlay">
     <div class="password-dialog">
       <h2 id="passTitle">Введите пароль</h2>
@@ -341,7 +302,7 @@
 
 <script>
   (function() {
-    // ---------- Основные переменные ----------
+    // ---------- Глобальные переменные ----------
     const STORAGE_KEY = 'encryptedFamilyTree';
     let treeData = { persons: [], relationships: [] };
     let encryptionKey = false;
@@ -349,7 +310,7 @@
     let currentLogin = '';
     let focusPersonId = null;
 
-    // DOM
+    // DOM элементы
     const treeContainer = document.getElementById('treeContainer');
     const editModal = document.getElementById('editModal');
     const passwordOverlay = document.getElementById('passwordOverlay');
@@ -373,7 +334,7 @@
 
     let svgSelection = null, gMain = null, zoomBehavior = null;
 
-    // ---------- Состояние кнопки «Продолжить» ----------
+    // ---------- Управление состоянием кнопки ----------
     function updateSubmitButtonState() {
       if (passwordInput.value.trim() === '') {
         passwordSubmit.classList.add('disabled');
@@ -390,10 +351,11 @@
       const keyMaterial = await crypto.subtle.importKey(
         'raw', new TextEncoder().encode(combined), 'PBKDF2', false, ['deriveKey']
       );
-      return await crypto.subtle.deriveKey(
+      const key = await crypto.subtle.deriveKey(
         { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
         keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
       );
+      return { key, salt };
     }
 
     async function encryptData(data, login, password) {
@@ -403,15 +365,21 @@
       const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded);
       return {
         login,
-        payload: JSON.stringify({ salt: Array.from(salt), iv: Array.from(iv), data: Array.from(new Uint8Array(encrypted)) })
+        payload: JSON.stringify({
+          salt: Array.from(salt),
+          iv: Array.from(iv),
+          data: Array.from(new Uint8Array(encrypted))
+        })
       };
     }
 
     async function decryptData(stored, login, password) {
       if (stored.login !== login) throw new Error('Неверный логин');
       const { salt, iv, data } = JSON.parse(stored.payload);
-      const key = await deriveKey(login, password, new Uint8Array(salt));
-      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(iv) }, key, new Uint8Array(data));
+      const { key } = await deriveKey(login, password, new Uint8Array(salt));
+      const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: new Uint8Array(iv) }, key, new Uint8Array(data)
+      );
       return JSON.parse(new TextDecoder().decode(decrypted));
     }
 
@@ -427,7 +395,7 @@
       return await decryptData(JSON.parse(raw), login, password);
     }
 
-    // ---------- Инициализация пароля ----------
+    // ---------- Инициализация и вход ----------
     async function checkStorageAndPrompt() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -479,7 +447,7 @@
       closeEditPanel();
     }
 
-    // ---------- Визуализация с точечным фоном ----------
+    // ---------- Рендеринг дерева ----------
     function renderAll() {
       if (!passwordSet) return;
       treeContainer.innerHTML = '';
@@ -489,7 +457,6 @@
         return;
       }
 
-      // Граф
       const g = new dagre.graphlib.Graph({ directed: true });
       g.setDefaultEdgeLabel(() => ({}));
       treeData.persons.forEach(p => g.setNode(p.id, {
@@ -524,7 +491,6 @@
         .attr('width', width)
         .attr('height', height);
 
-      // Defs: точечный паттерн + маркер стрелки
       const defs = svgSelection.append('defs');
       defs.append('pattern')
         .attr('id', 'dotPattern')
@@ -533,7 +499,7 @@
         .attr('height', 20)
         .append('circle')
         .attr('cx', 10).attr('cy', 10).attr('r', 1.8)
-        .attr('fill', 'rgba(44, 62, 80, 0.3)');   // более заметные точки
+        .attr('fill', 'rgba(44, 62, 80, 0.3)');
 
       defs.append('marker')
         .attr('id', 'arrowhead')
@@ -545,7 +511,6 @@
         .attr('d', 'M 0 0 L 10 5 L 0 10 Z')
         .attr('fill', '#8395a7');
 
-      // Zoom
       zoomBehavior = d3.zoom().scaleExtent([0.3, 3]).on('zoom', (event) => {
         gMain.attr('transform', event.transform);
       });
@@ -556,7 +521,7 @@
 
       gMain = svgSelection.append('g');
 
-      // Точечный фон, который двигается вместе с деревом
+      // Точечный фон
       gMain.append('rect')
         .attr('width', 20000)
         .attr('height', 20000)
@@ -580,7 +545,7 @@
         }
       });
 
-      // Узлы (люди)
+      // Узлы
       const nodesLayer = gMain.append('g');
       subGraph.nodes().forEach(nodeId => {
         const node = subGraph.node(nodeId);
@@ -640,30 +605,237 @@
       }
     }
 
-    // Вспомогательные функции обхода
-    function getAncestors(id) { /* ... как и раньше ... */ }
-    function getDescendants(id) { /* ... */ }
-    function getSpouses(id) { /* ... */ }
+    // ---------- Обход родственных связей ----------
+    function getAncestors(personId) {
+      const ancestors = new Set();
+      const stack = [personId];
+      while (stack.length) {
+        const curr = stack.pop();
+        treeData.relationships
+          .filter(r => r.type === 'parent' && r.person2 === curr)
+          .forEach(r => {
+            if (!ancestors.has(r.person1)) {
+              ancestors.add(r.person1);
+              stack.push(r.person1);
+            }
+          });
+      }
+      return Array.from(ancestors);
+    }
 
-    // Модальное окно редактирования
-    function openEditPanel(personId = null) { /* ... */ }
-    function closeEditPanel() { editModal.classList.remove('active'); }
-    function populateRelationTargets(excludeId) { /* ... */ }
-    photoInput.addEventListener('change', (e) => { /* ... */ });
+    function getDescendants(personId) {
+      const descendants = new Set();
+      const stack = [personId];
+      while (stack.length) {
+        const curr = stack.pop();
+        treeData.relationships
+          .filter(r => r.type === 'parent' && r.person1 === curr)
+          .forEach(r => {
+            if (!descendants.has(r.person2)) {
+              descendants.add(r.person2);
+              stack.push(r.person2);
+            }
+          });
+      }
+      return Array.from(descendants);
+    }
 
-    async function savePerson() { /* ... */ }
-    async function deletePerson() { /* ... */ }
-    async function addRelation() { /* ... */ }
+    function getSpouses(personId) {
+      return treeData.relationships
+        .filter(r => r.type === 'spouse' && (r.person1 === personId || r.person2 === personId))
+        .map(r => r.person1 === personId ? r.person2 : r.person1);
+    }
 
-    // Обработчики кнопок
+    // ---------- Модальное окно редактирования ----------
+    function openEditPanel(personId = null) {
+      if (personId) {
+        const person = treeData.persons.find(p => p.id === personId);
+        if (!person) return;
+        personIdInput.value = person.id;
+        firstNameInput.value = person.firstName || '';
+        lastNameInput.value = person.lastName || '';
+        birthDateInput.value = person.birthDate || '';
+        deathDateInput.value = person.deathDate || '';
+        genderInput.value = person.gender || 'male';
+        notesInput.value = person.notes || '';
+        photoPreview.innerHTML = person.photo ? `<img src="${person.photo}" style="max-width:80px; border-radius:50%;">` : '';
+        document.getElementById('deletePersonBtn').style.display = 'inline-block';
+        document.getElementById('editTitle').textContent = 'Редактировать';
+      } else {
+        personIdInput.value = '';
+        firstNameInput.value = '';
+        lastNameInput.value = '';
+        birthDateInput.value = '';
+        deathDateInput.value = '';
+        genderInput.value = 'male';
+        notesInput.value = '';
+        photoPreview.innerHTML = '';
+        document.getElementById('deletePersonBtn').style.display = 'none';
+        document.getElementById('editTitle').textContent = 'Добавить человека';
+      }
+      populateRelationTargets(personId);
+      editModal.classList.add('active');
+    }
+
+    function closeEditPanel() {
+      editModal.classList.remove('active');
+    }
+
+    function populateRelationTargets(excludeId) {
+      relTargetSelect.innerHTML = '';
+      treeData.persons.forEach(p => {
+        if (p.id !== excludeId) {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = `${p.firstName || '?'} ${p.lastName || ''}`;
+          relTargetSelect.appendChild(opt);
+        }
+      });
+    }
+
+    photoInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          photoPreview.innerHTML = `<img src="${ev.target.result}" style="max-width:80px; border-radius:50%;">`;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    async function savePerson() {
+      const id = personIdInput.value;
+      const data = {
+        firstName: firstNameInput.value.trim(),
+        lastName: lastNameInput.value.trim(),
+        birthDate: birthDateInput.value,
+        deathDate: deathDateInput.value,
+        gender: genderInput.value,
+        notes: notesInput.value.trim(),
+        photo: photoPreview.querySelector('img')?.src || ''
+      };
+      if (id) {
+        const idx = treeData.persons.findIndex(p => p.id === id);
+        if (idx !== -1) treeData.persons[idx] = { ...treeData.persons[idx], ...data };
+      } else {
+        const newId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        treeData.persons.push({ id: newId, ...data });
+      }
+      await saveToStorage();
+      closeEditPanel();
+      renderAll();
+    }
+
+    async function deletePerson() {
+      const id = personIdInput.value;
+      if (!id) return;
+      if (!confirm('Удалить этого человека и все его связи?')) return;
+      treeData.persons = treeData.persons.filter(p => p.id !== id);
+      treeData.relationships = treeData.relationships.filter(r => r.person1 !== id && r.person2 !== id);
+      if (focusPersonId === id) focusPersonId = null;
+      await saveToStorage();
+      closeEditPanel();
+      renderAll();
+    }
+
+    async function addRelation() {
+      const sourceId = personIdInput.value;
+      const targetId = relTargetSelect.value;
+      const type = relTypeSelect.value;
+      if (!sourceId || !targetId) return alert('Выберите человека для связи');
+      if (sourceId === targetId) return alert('Нельзя связать самого с собой');
+      const exists = treeData.relationships.some(r =>
+        (r.type === type && r.person1 === sourceId && r.person2 === targetId) ||
+        (type === 'spouse' && r.type === 'spouse' && ((r.person1 === sourceId && r.person2 === targetId) || (r.person1 === targetId && r.person2 === sourceId)))
+      );
+      if (exists) return alert('Такая связь уже существует');
+      treeData.relationships.push({ type, person1: sourceId, person2: targetId });
+      await saveToStorage();
+      closeEditPanel();
+      renderAll();
+    }
+
+    // ---------- Обработчики кнопок ----------
+    document.getElementById('savePersonBtn').addEventListener('click', savePerson);
+    document.getElementById('deletePersonBtn').addEventListener('click', deletePerson);
+    document.getElementById('cancelEditBtn').addEventListener('click', closeEditPanel);
+    document.getElementById('addRelationBtn').addEventListener('click', addRelation);
+    document.getElementById('closeModalBtn').addEventListener('click', closeEditPanel);
+    editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditPanel(); });
+
     document.getElementById('addPersonBtn').addEventListener('click', () => openEditPanel(null));
-    document.getElementById('focusRootBtn').addEventListener('click', () => { focusPersonId = null; renderAll(); });
-    // ... остальные обработчики ...
 
+    document.getElementById('focusRootBtn').addEventListener('click', () => {
+      focusPersonId = null;
+      renderAll();
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      if (!query) {
+        focusPersonId = null;
+        renderAll();
+        return;
+      }
+      const found = treeData.persons.find(p =>
+        `${p.firstName} ${p.lastName}`.toLowerCase().includes(query)
+      );
+      if (found) {
+        focusPersonId = found.id;
+        renderAll();
+      }
+    });
+
+    document.getElementById('lockBtn').addEventListener('click', lockApp);
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return alert('Нет данных для экспорта');
+      const blob = new Blob([stored], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'family_tree_encrypted.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById('importBtn').addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          localStorage.setItem(STORAGE_KEY, ev.target.result);
+          lockApp();
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    });
+
+    document.getElementById('undoBtn').addEventListener('click', () => alert('Отмена в разработке'));
+    document.getElementById('redoBtn').addEventListener('click', () => alert('Повтор в разработке'));
+
+    // ---------- Окно входа ----------
     passwordSubmit.addEventListener('click', handlePasswordSubmit);
     passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handlePasswordSubmit(); });
     loginInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') passwordInput.focus(); });
-    createNewLink.addEventListener('click', (e) => { /* ... */ });
+
+    // Кнопка «Создать новое древо» — полная реализация
+    createNewLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem(STORAGE_KEY);
+      passTitle.textContent = 'Создайте новое древо';
+      createNewLink.style.display = 'none';
+      loginInput.value = '';
+      passwordInput.value = '';
+      updateSubmitButtonState();
+      loginInput.focus();
+    });
 
     // Старт
     checkStorageAndPrompt();
