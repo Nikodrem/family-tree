@@ -11,76 +11,253 @@
     body {
       font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      min-height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
     }
     .app-container {
-      width: 100vw; height: 100vh; display: flex; flex-direction: column;
-      background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      overflow: hidden; position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      position: relative;
     }
     .glass-header {
-      background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px); padding: 12px 24px 8px;
-      display: flex; flex-direction: column; border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-      flex-shrink: 0; gap: 8px;
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(10px);
+      padding: 12px 24px 8px;
+      display: flex;
+      flex-direction: column;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+      flex-shrink: 0;
+      gap: 8px;
     }
-    .header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-    .header-top h1 { font-weight: 300; font-size: 1.8rem; color: #2c3e50; letter-spacing: 1px; }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .header-top h1 {
+      font-weight: 300;
+      font-size: 1.8rem;
+      color: #2c3e50;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .header-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-bottom: 4px; }
     .glass-btn {
-      background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.6);
-      border-radius: 16px; padding: 10px 18px; color: #2c3e50; font-size: 0.9rem; cursor: pointer;
-      transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 6px; font-weight: 500;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 16px;
+      padding: 10px 18px;
+      color: #2c3e50;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+      white-space: nowrap;
     }
-    .glass-btn:hover { background: rgba(255, 255, 255, 0.75); box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-1px); }
-    .glass-btn.primary { background: rgba(100, 149, 237, 0.85); border-color: rgba(255,255,255,0.9); color: white; font-weight: 600; }
+    .glass-btn:hover {
+      background: rgba(255, 255, 255, 0.75);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+    .glass-btn i { font-size: 1rem; }
+    .glass-btn.primary {
+      background: rgba(100, 149, 237, 0.85);
+      border-color: rgba(255, 255, 255, 0.9);
+      color: white;
+      font-weight: 600;
+    }
     .glass-btn.primary:hover { background: rgba(70, 130, 220, 0.95); }
-    .glass-btn.disabled { background: rgba(100, 149, 237, 0.3); pointer-events: none; color: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.3); }
-    .search-box {
-      background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.6);
-      border-radius: 16px; padding: 8px 16px; color: #2c3e50; font-size: 0.95rem; width: 200px; outline: none;
+    .glass-btn.disabled {
+      background: rgba(100, 149, 237, 0.3);
+      pointer-events: none;
+      color: rgba(255,255,255,0.6);
+      border-color: rgba(255,255,255,0.3);
     }
-    .tree-area { flex: 1; position: relative; overflow: hidden; background: rgba(255,255,255,0.05); cursor: grab; }
+    .search-box {
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 16px;
+      padding: 8px 16px;
+      color: #2c3e50;
+      font-size: 0.95rem;
+      width: 200px;
+      outline: none;
+    }
+    .search-box::placeholder { color: #7f8c8d; }
+    .tree-area {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.05);
+      cursor: grab;
+    }
     .tree-area:active { cursor: grabbing; }
     .tree-area svg { width: 100%; height: 100%; }
     .modal-overlay {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.2);
-      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); display: flex;
-      justify-content: center; align-items: center; z-index: 15; visibility: hidden; opacity: 0; transition: 0.3s;
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 15;
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.3s ease;
     }
     .modal-overlay.active { visibility: visible; opacity: 1; }
     .edit-panel, .info-panel {
-      background: rgba(255,255,255,0.8); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.5);
-      border-radius: 28px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); padding: 28px; width: 420px;
-      max-width: 90vw; max-height: 85vh; overflow-y: auto; position: relative;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 28px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+      padding: 28px;
+      width: 420px;
+      max-width: 90vw;
+      max-height: 85vh;
+      overflow-y: auto;
+      position: relative;
     }
     .edit-panel h3 { margin-bottom: 18px; font-weight: 400; color: #2c3e50; }
     .edit-panel label { display: block; margin-bottom: 6px; font-size: 0.8rem; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; }
     .edit-panel input, .edit-panel textarea {
-      width: 100%; background: rgba(255,255,255,0.7); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.9);
-      border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; font-size: 0.95rem; outline: none; color: #2c3e50;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      font-size: 0.95rem;
+      outline: none;
+      color: #2c3e50;
     }
+    .edit-panel input[type="file"] { padding: 6px; }
+    .edit-panel textarea { min-height: 60px; }
     .edit-panel .row { display: flex; gap: 10px; }
     .edit-panel .row > * { flex: 1; }
-    .close-modal-btn { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 1.8rem; color: #7f8c8d; cursor: pointer; }
+    .close-modal-btn {
+      position: absolute;
+      top: 12px; right: 16px;
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      color: #7f8c8d;
+      cursor: pointer;
+      line-height: 1;
+    }
     .gender-toggle { display: flex; gap: 12px; margin-bottom: 14px; }
-    .gender-btn { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.6); background: rgba(255,255,255,0.4); color: #2c3e50; cursor: pointer; }
-    .gender-btn.active { background: rgba(100, 149, 237, 0.85); color: white; border-color: transparent; font-weight: 600; }
+    .gender-btn {
+      flex: 1; padding: 10px; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.4);
+      color: #2c3e50; font-weight: 500; cursor: pointer;
+    }
+    .gender-btn.active {
+      background: rgba(100, 149, 237, 0.85);
+      color: white; border-color: transparent; font-weight: 600;
+    }
     .node-card { cursor: pointer; transition: filter 0.2s; }
     .node-card:hover { filter: brightness(1.03); }
     .node-card.selected rect { stroke: #6495ED; stroke-width: 3; }
-    .port { cursor: crosshair; fill: rgba(100,149,237,0.7); stroke: white; stroke-width: 2; }
-    .port:hover { fill: rgba(100,149,237,1); }
-    .action-btn {
-      fill: white; stroke: #ccc; stroke-width: 1; cursor: pointer; transition: 0.2s;
+    .port {
+      cursor: crosshair;
+      fill: rgba(100, 149, 237, 0.7);
+      stroke: white;
+      stroke-width: 2;
     }
-    .action-btn:hover { fill: #f0f0f0; }
-    .empty-tree-message { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 1.2rem; color: rgba(44,62,80,0.5); }
-    .password-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.3); backdrop-filter: blur(15px); display: flex; justify-content: center; align-items: center; z-index: 20; }
-    .password-dialog { background: rgba(255,255,255,0.8); backdrop-filter: blur(25px); border-radius: 28px; padding: 32px; max-width: 360px; width: 90%; text-align: center; }
-    .password-dialog input { width: 100%; margin-bottom: 16px; background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.8); border-radius: 12px; padding: 12px; font-size: 1rem; outline: none; }
-    @media (max-width: 700px) { .edit-panel, .info-panel { width: 95vw; } .header-top h1 { font-size: 1.2rem; } .search-box { width: 120px; } }
+    .port:hover { fill: rgba(100, 149, 237, 1); }
+    .action-btn-group {
+      cursor: default;
+    }
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255,255,255,0.8);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #2c3e50;
+      font-size: 1rem;
+    }
+    .action-btn:hover { background: rgba(255,255,255,0.9); }
+    .action-btn.delete { background: rgba(220,80,80,0.15); color: #c0392b; }
+    .action-btn.delete:hover { background: rgba(220,80,80,0.3); }
+    .empty-tree-message {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.2rem;
+      color: rgba(44, 62, 80, 0.5);
+      pointer-events: none;
+      text-align: center;
+    }
+    .password-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(15px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+    }
+    .password-dialog {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(25px);
+      border-radius: 28px;
+      padding: 32px;
+      max-width: 360px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+    .password-dialog h2 { font-weight: 300; margin-bottom: 20px; color: #2c3e50; }
+    .password-dialog input {
+      width: 100%;
+      margin-bottom: 16px;
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 1rem;
+      outline: none;
+    }
+    .password-dialog input:last-of-type { margin-bottom: 20px; }
+    @media (max-width: 700px) {
+      .edit-panel, .info-panel { width: 95vw; }
+      .header-top h1 { font-size: 1.2rem; }
+      .search-box { width: 120px; }
+    }
   </style>
 </head>
 <body>
@@ -106,29 +283,39 @@
   </header>
   <div class="tree-area" id="treeContainer"></div>
 
-  <!-- Редактирование -->
+  <!-- Редактирование человека -->
   <div class="modal-overlay" id="editModal">
     <div class="edit-panel">
       <button class="close-modal-btn" id="closeModalBtn">&times;</button>
       <h3 id="editTitle">Добавить человека</h3>
-      <input type="hidden" id="personId"><input type="hidden" id="isRootInput" value="false">
+      <input type="hidden" id="personId">
+      <input type="hidden" id="isRootInput" value="false">
       <label>Имя</label><input type="text" id="firstName" placeholder="Имя">
       <label>Фамилия</label><input type="text" id="lastName" placeholder="Фамилия">
       <label>Отчество</label><input type="text" id="patronymic" placeholder="Отчество">
-      <div class="row"><div><label>Дата рождения</label><input type="date" id="birthDate"></div><div><label>Дата смерти</label><input type="date" id="deathDate"></div></div>
-      <div id="roleField" style="display:none;"><label>Роль (переопределить)</label><input type="text" id="role" placeholder="Например: дед, бабушка"></div>
+      <div class="row">
+        <div><label>Дата рождения</label><input type="date" id="birthDate"></div>
+        <div><label>Дата смерти</label><input type="date" id="deathDate"></div>
+      </div>
+      <div id="roleField" style="display:none;">
+        <label>Роль (переопределить)</label>
+        <input type="text" id="role" placeholder="Например: дед, бабушка">
+      </div>
       <label>Пол</label>
       <div class="gender-toggle">
         <button type="button" class="gender-btn active" data-gender="male">Мужской</button>
         <button type="button" class="gender-btn" data-gender="female">Женский</button>
       </div>
       <input type="hidden" id="gender" value="male">
-      <label>Фото</label><input type="file" id="photoInput" accept="image/*"><div id="photoPreview" style="margin-bottom:10px;text-align:center;"></div>
-      <label>Заметки</label><textarea id="notes" placeholder="Дополнительная информация..."></textarea>
+      <label>Фото</label>
+      <input type="file" id="photoInput" accept="image/*">
+      <div id="photoPreview" style="margin-bottom:10px; text-align:center;"></div>
+      <label>Заметки</label>
+      <textarea id="notes" placeholder="Дополнительная информация..."></textarea>
       <div style="display:flex; gap:8px; margin-top:8px;">
         <button class="glass-btn primary" id="savePersonBtn">Сохранить</button>
         <button class="glass-btn primary" id="setRootBtn" style="display:none;">Я</button>
-        <button class="glass-btn" id="deletePersonBtn" style="display:none; background: rgba(220,80,80,0.8); color:white;">Удалить</button>
+        <button class="glass-btn" id="deletePersonBtn" style="display:none; background: rgba(220,80,80,0.8); color: white;">Удалить</button>
         <button class="glass-btn" id="cancelEditBtn">Отмена</button>
       </div>
     </div>
@@ -148,21 +335,25 @@
     </div>
   </div>
 
+  <!-- Диалог связи -->
   <div class="modal-overlay" id="relationModal">
-    <div class="edit-panel" style="width:auto; text-align:center;">
+    <div class="info-panel" style="width:auto; text-align:center;">
       <h3 id="relationTitle">Выберите тип связи</h3>
       <div id="relationButtons"></div>
       <button class="glass-btn" id="cancelRelationBtn" style="margin-top:12px;">Отмена</button>
     </div>
   </div>
 
+  <!-- Окно входа -->
   <div class="password-overlay" id="passwordOverlay">
     <div class="password-dialog">
       <h2 id="passTitle">Введите пароль</h2>
       <input type="text" id="loginInput" placeholder="Логин" autocomplete="username">
       <input type="password" id="passwordInput" placeholder="Пароль">
       <button class="glass-btn primary disabled" id="passwordSubmit" style="width:100%;">Продолжить</button>
-      <p style="margin-top:12px; font-size:0.8rem; color:#7f8c8d;"><a href="#" id="createNewLink">Создать новое древо</a></p>
+      <p style="margin-top:12px; font-size:0.8rem; color:#7f8c8d;">
+        <a href="#" id="createNewLink">Создать новое древо</a>
+      </p>
     </div>
   </div>
 </div>
@@ -174,7 +365,7 @@
     let passwordSet = false, currentLogin = '', currentPassword = '';
     let nodePositions = {};
     let selectedPersonId = null;
-    let actionButtonsGroup = null; // SVG группа для кнопок действий
+    let actionButtonsGroup = null;
 
     const treeContainer = document.getElementById('treeContainer');
     const editModal = document.getElementById('editModal');
@@ -235,7 +426,9 @@
     }
     function saveToStorage() {
       if (!currentLogin || !currentPassword) return;
-      encryptData(treeData, currentLogin, currentPassword).then(enc => localStorage.setItem(STORAGE_KEY, JSON.stringify(enc))).catch(console.error);
+      encryptData(treeData, currentLogin, currentPassword)
+        .then(enc => localStorage.setItem(STORAGE_KEY, JSON.stringify(enc)))
+        .catch(e => console.error('Ошибка сохранения', e));
     }
 
     // ---------- Вход ----------
@@ -243,29 +436,47 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         try { loginInput.value = JSON.parse(raw).login || ''; } catch(e){}
-        passTitle.textContent = 'Вход в семейное древо'; createNewLink.style.display = 'inline';
+        passTitle.textContent = 'Вход в семейное древо';
+        createNewLink.style.display = 'inline';
       } else {
-        passTitle.textContent = 'Создайте новое древо'; createNewLink.style.display = 'none';
+        passTitle.textContent = 'Создайте новое древо';
+        createNewLink.style.display = 'none';
       }
-      passwordInput.value = ''; updateSubmitButtonState(); passwordOverlay.style.display = 'flex'; loginInput.focus();
+      passwordInput.value = '';
+      updateSubmitButtonState();
+      passwordOverlay.style.display = 'flex';
+      loginInput.focus();
     }
     async function handlePasswordSubmit() {
-      const login = loginInput.value.trim(), pass = passwordInput.value.trim();
+      const login = loginInput.value.trim();
+      const pass = passwordInput.value.trim();
       if (!login || !pass) return alert('Введите логин и пароль');
       const raw = localStorage.getItem(STORAGE_KEY);
       try {
         if (raw) treeData = await decryptData(JSON.parse(raw), login, pass);
         else treeData = { persons: [], relationships: [] };
-        currentLogin = login; currentPassword = pass; passwordSet = true;
+        currentLogin = login;
+        currentPassword = pass;
+        passwordSet = true;
         passwordOverlay.style.display = 'none';
-        loadNodePositionsFromData(); renderAll();
+        loadNodePositionsFromData();
+        renderAll();
       } catch (e) { alert(e.message); }
     }
     function lockApp() {
-      passwordSet = false; currentLogin = ''; currentPassword = ''; treeData = { persons: [], relationships: [] };
-      nodePositions = {}; passwordOverlay.style.display = 'flex'; passTitle.textContent = 'Вход в семейное древо';
-      createNewLink.style.display = 'inline'; loginInput.value = ''; passwordInput.value = ''; updateSubmitButtonState();
-      closeEditModal(); clearSelection();
+      passwordSet = false;
+      currentLogin = '';
+      currentPassword = '';
+      treeData = { persons: [], relationships: [] };
+      nodePositions = {};
+      passwordOverlay.style.display = 'flex';
+      passTitle.textContent = 'Вход в семейное древо';
+      createNewLink.style.display = 'inline';
+      loginInput.value = '';
+      passwordInput.value = '';
+      updateSubmitButtonState();
+      closeEditModal();
+      clearSelection();
     }
 
     // Позиции
@@ -283,7 +494,7 @@
       treeData.persons.forEach(p => { if (nodePositions[p.id]) { p.x = nodePositions[p.id].x; p.y = nodePositions[p.id].y; } });
     }
 
-    // Роли (расширенные)
+    // Роли
     function findRootPerson() { return treeData.persons.find(p => p.isRoot); }
     function getDisplayRole(person) {
       if (person.role && person.role.trim()) return person.role.trim();
@@ -330,7 +541,6 @@
     function pathToRole(path, gender) {
       if (path.length === 0) return 'Я';
       const steps = path.map(p => p.rel);
-      // Прямые предки/потомки
       if (steps.every(s => s === 'parent')) {
         const gen = steps.length;
         if (gen === 1) return gender === 'female' ? 'Мать' : 'Отец';
@@ -345,24 +555,18 @@
         if (gen === 3) return gender === 'female' ? 'Правнучка' : 'Правнук';
         return `Пра- (${gen}) ` + (gender === 'female' ? 'внучка' : 'внук');
       }
-      // Брат/сестра
       if (steps.length === 2 && steps[0] === 'child' && steps[1] === 'parent') {
         return gender === 'female' ? 'Сестра' : 'Брат';
       }
-      // Дядя/тётя
       if (steps.length === 3 && steps[0] === 'child' && steps[1] === 'parent' && steps[2] === 'parent') {
         return gender === 'female' ? 'Тётя' : 'Дядя';
       }
-      // Племянник/племянница
       if (steps.length === 3 && steps[0] === 'parent' && steps[1] === 'child' && steps[2] === 'child') {
         return gender === 'female' ? 'Племянница' : 'Племянник';
       }
-      // Супруг/супруга
       if (steps.length === 1 && steps[0] === 'spouse') return gender === 'female' ? 'Жена' : 'Муж';
-      // Более сложные – описательно
       const relationNames = [];
-      for (let i = 0; i < steps.length; i++) {
-        const s = steps[i];
+      for (const s of steps) {
         if (s === 'parent') relationNames.push('родитель');
         else if (s === 'child') relationNames.push('ребёнок');
         else if (s === 'spouse') relationNames.push('супруг(а)');
@@ -378,20 +582,41 @@
         treeContainer.innerHTML = '<div class="empty-tree-message">Нажмите «+» чтобы добавить первого человека</div>';
         return;
       }
-      const width = treeContainer.clientWidth || 800, height = treeContainer.clientHeight || 600;
+
+      const width = treeContainer.clientWidth || 800;
+      const height = treeContainer.clientHeight || 600;
       const svg = d3.select(treeContainer).append('svg').attr('width', width).attr('height', height);
+
       const defs = svg.append('defs');
-      defs.append('pattern').attr('id','dotPattern').attr('patternUnits','userSpaceOnUse').attr('width',20).attr('height',20)
-        .append('circle').attr('cx',10).attr('cy',10).attr('r',1).attr('fill','rgba(44,62,80,0.15)');
-      defs.append('marker').attr('id','arrowhead').attr('viewBox','0 0 10 10').attr('refX',10).attr('refY',5).attr('markerWidth',6).attr('markerHeight',6)
-        .append('path').attr('d','M 0 0 L 10 5 L 0 10 Z').attr('fill','#8395a7');
+      defs.append('pattern')
+        .attr('id', 'dotPattern')
+        .attr('patternUnits', 'userSpaceOnUse')
+        .attr('width', 20).attr('height', 20)
+        .append('circle')
+        .attr('cx', 10).attr('cy', 10).attr('r', 1.0)
+        .attr('fill', 'rgba(44, 62, 80, 0.15)');
+
+      defs.append('marker')
+        .attr('id', 'arrowhead')
+        .attr('viewBox', '0 0 10 10')
+        .attr('refX', 10).attr('refY', 5)
+        .attr('markerWidth', 6).attr('markerHeight', 6)
+        .attr('orient', 'auto')
+        .append('path').attr('d', 'M 0 0 L 10 5 L 0 10 Z').attr('fill', '#8395a7');
 
       const gMain = svg.append('g');
-      const zoomBehavior = d3.zoom().scaleExtent([0.3, 3]).on('zoom', e => gMain.attr('transform', e.transform));
+      const zoomBehavior = d3.zoom().scaleExtent([0.3, 3]).on('zoom', (event) => {
+        gMain.attr('transform', event.transform);
+      });
       svg.call(zoomBehavior);
-      svg.on('click', (e) => { if (e.target === svg.node()) clearSelection(); });
+      svg.on('click', (event) => {
+        if (event.target === svg.node()) clearSelection();
+      });
 
-      gMain.append('rect').attr('width',20000).attr('height',20000).attr('x',-10000).attr('y',-10000).attr('fill','url(#dotPattern)');
+      gMain.append('rect')
+        .attr('width', 20000).attr('height', 20000)
+        .attr('x', -10000).attr('y', -10000)
+        .attr('fill', 'url(#dotPattern)');
 
       const edgesLayer = gMain.append('g');
       const drawEdges = () => {
@@ -401,78 +626,206 @@
           if (!s || !t) return;
           const x1 = s.x, y1 = rel.type === 'parent' ? s.y + 30 : s.y;
           const x2 = t.x, y2 = rel.type === 'parent' ? t.y - 30 : t.y;
-          edgesLayer.append('line').attr('x1',x1).attr('y1',y1).attr('x2',x2).attr('y2',y2)
+          edgesLayer.append('line')
+            .attr('x1', x1).attr('y1', y1)
+            .attr('x2', x2).attr('y2', y2)
             .attr('stroke', rel.type === 'spouse' ? '#ff9f43' : '#8395a7')
-            .attr('stroke-width',2).attr('stroke-dasharray', rel.type === 'spouse' ? '6,4' : 'none')
+            .attr('stroke-width', 2)
+            .attr('stroke-dasharray', rel.type === 'spouse' ? '6,4' : 'none')
             .attr('marker-end', rel.type === 'parent' ? 'url(#arrowhead)' : '');
         });
       };
       drawEdges();
 
       const nodesLayer = gMain.append('g');
-      // Кнопки действий создадим один раз
-      actionButtonsGroup = gMain.append('g').attr('id','actionButtons').style('visibility','hidden');
-      const btnBg = actionButtonsGroup.append('rect').attr('width',70).attr('height',30).attr('rx',15).attr('fill','white').attr('stroke','#ccc');
-      const editIcon = actionButtonsGroup.append('text').attr('x',15).attr('y',20).text('✏️').style('cursor','pointer');
-      const deleteIcon = actionButtonsGroup.append('text').attr('x',45).attr('y',20).text('🗑️').style('cursor','pointer');
-      editIcon.on('click', () => { if (selectedPersonId) openEditModal(selectedPersonId); });
-      deleteIcon.on('click', () => { if (selectedPersonId) deleteSelectedPerson(); });
+      // Группа для кнопок действий (изначально скрыта)
+      actionButtonsGroup = gMain.append('g')
+        .attr('id', 'actionButtons')
+        .style('visibility', 'hidden');
+
+      // Фон для кнопок
+      actionButtonsGroup.append('rect')
+        .attr('width', 80)
+        .attr('height', 40)
+        .attr('rx', 12)
+        .attr('fill', 'rgba(255,255,255,0.6)')
+        .attr('stroke', 'rgba(255,255,255,0.8)')
+        .attr('stroke-width', 1);
+
+      // Кнопка "Редактировать"
+      actionButtonsGroup.append('foreignObject')
+        .attr('x', 8).attr('y', 5)
+        .attr('width', 30).attr('height', 30)
+        .append('xhtml:div')
+        .attr('class', 'action-btn')
+        .html('<i class="fas fa-pencil-alt"></i>')
+        .on('click', () => {
+          if (selectedPersonId) openEditModal(selectedPersonId);
+        });
+
+      // Кнопка "Удалить"
+      actionButtonsGroup.append('foreignObject')
+        .attr('x', 44).attr('y', 5)
+        .attr('width', 30).attr('height', 30)
+        .append('xhtml:div')
+        .attr('class', 'action-btn delete')
+        .html('<i class="fas fa-trash-alt"></i>')
+        .on('click', () => {
+          if (selectedPersonId) deleteSelectedPerson();
+        });
 
       treeData.persons.forEach(person => {
-        const pos = nodePositions[person.id]; if (!pos) return;
+        const pos = nodePositions[person.id];
+        if (!pos) return;
         const cardWidth = 140, cardHeight = 60;
-        const card = nodesLayer.append('g').attr('class','node-card').attr('transform',`translate(${pos.x - cardWidth/2}, ${pos.y - cardHeight/2})`);
-        card.append('rect').attr('width',cardWidth).attr('height',cardHeight).attr('rx',14).attr('fill','#ffffff').attr('stroke','rgba(0,0,0,0.1)').attr('stroke-width',1);
-        if (person.photo) card.append('image').attr('x',6).attr('y',6).attr('width',28).attr('height',28).attr('clip-path','circle(14px at 14px 14px)').attr('href',person.photo);
-        card.append('text').attr('x', person.photo?40:12).attr('y',24).attr('fill','#2c3e50').attr('font-size','12px').attr('font-weight','600').text(`${person.firstName||'?'} ${person.lastName||''}`.trim());
-        card.append('text').attr('x', person.photo?40:12).attr('y',42).attr('fill','#7f8c8d').attr('font-size','10px').text(getDisplayRole(person));
-        card.on('click', function(event) { event.stopPropagation(); selectPerson(person.id, pos); });
+        const card = nodesLayer.append('g')
+          .attr('class', 'node-card')
+          .attr('transform', `translate(${pos.x - cardWidth/2}, ${pos.y - cardHeight/2})`);
+
+        card.append('rect')
+          .attr('width', cardWidth)
+          .attr('height', cardHeight)
+          .attr('rx', 14)
+          .attr('fill', '#ffffff')
+          .attr('stroke', 'rgba(0,0,0,0.1)')
+          .attr('stroke-width', 1);
+
+        if (person.photo) {
+          card.append('image')
+            .attr('x', 6).attr('y', 6)
+            .attr('width', 28).attr('height', 28)
+            .attr('clip-path', 'circle(14px at 14px 14px)')
+            .attr('href', person.photo);
+        }
+
+        card.append('text')
+          .attr('x', person.photo ? 40 : 12)
+          .attr('y', 24)
+          .attr('fill', '#2c3e50')
+          .attr('font-size', '12px')
+          .attr('font-weight', '600')
+          .text(`${person.firstName || '?'} ${person.lastName || ''}`.trim());
+        card.append('text')
+          .attr('x', person.photo ? 40 : 12)
+          .attr('y', 42)
+          .attr('fill', '#7f8c8d')
+          .attr('font-size', '10px')
+          .text(getDisplayRole(person));
+
+        card.on('click', function(event) {
+          event.stopPropagation();
+          selectPerson(person.id, pos);
+        });
+
         // Порты
-        const portR = 6;
-        const portUp = card.append('circle').attr('cx',cardWidth/2).attr('cy',0).attr('r',portR).attr('class','port').attr('data-person-id',person.id);
-        const portDown = card.append('circle').attr('cx',cardWidth/2).attr('cy',cardHeight).attr('r',portR).attr('class','port').attr('data-person-id',person.id);
+        const portRadius = 6;
+        const portUp = card.append('circle')
+          .attr('cx', cardWidth/2).attr('cy', 0)
+          .attr('r', portRadius).attr('class', 'port')
+          .attr('data-person-id', person.id);
+        const portDown = card.append('circle')
+          .attr('cx', cardWidth/2).attr('cy', cardHeight)
+          .attr('r', portRadius).attr('class', 'port')
+          .attr('data-person-id', person.id);
+
         const portDrag = d3.drag()
-          .on('start', function(e) { e.sourceEvent.stopPropagation(); svg.on('.zoom',null); window.dragSource=person.id; const y0 = +d3.select(this).attr('cy')===0 ? pos.y-cardHeight/2 : pos.y+cardHeight/2; gMain.append('line').attr('id','dragLine').attr('x1',pos.x).attr('y1',y0).attr('x2',pos.x).attr('y2',y0).attr('stroke','#ff9f43').attr('stroke-width',2).attr('stroke-dasharray','5,3'); })
-          .on('drag', function(e) { const l = gMain.select('#dragLine'); if(!l.empty()) { const c = d3.pointer(e, gMain.node()); l.attr('x2',c[0]).attr('y2',c[1]); } })
-          .on('end', function(e) { const l = gMain.select('#dragLine'); if(!l.empty()) l.remove(); svg.call(zoomBehavior); const target = document.elementFromPoint(e.sourceEvent.clientX, e.sourceEvent.clientY)?.closest('.port'); if(target && window.dragSource) { const tid = target.getAttribute('data-person-id'); if(tid && tid !== window.dragSource) showRelationDialog(window.dragSource, tid); } window.dragSource=null; });
-        portUp.call(portDrag); portDown.call(portDrag);
-        // Перетаскивание карточки
+          .on('start', function(event) {
+            event.sourceEvent.stopPropagation();
+            svg.on('.zoom', null);
+            window.dragSource = person.id;
+            const portCy = +d3.select(this).attr('cy');
+            const yStart = (portCy === 0) ? pos.y - cardHeight/2 : pos.y + cardHeight/2;
+            gMain.append('line')
+              .attr('id', 'dragLine')
+              .attr('x1', pos.x).attr('y1', yStart)
+              .attr('x2', pos.x).attr('y2', yStart)
+              .attr('stroke', '#ff9f43').attr('stroke-width', 2)
+              .attr('stroke-dasharray', '5,3');
+          })
+          .on('drag', function(event) {
+            const line = gMain.select('#dragLine');
+            if (!line.empty()) {
+              const coords = d3.pointer(event, gMain.node());
+              line.attr('x2', coords[0]).attr('y2', coords[1]);
+            }
+          })
+          .on('end', function(event) {
+            const line = gMain.select('#dragLine');
+            if (!line.empty()) line.remove();
+            svg.call(zoomBehavior);
+            const targetEl = document.elementFromPoint(event.sourceEvent.clientX, event.sourceEvent.clientY);
+            const targetPort = targetEl?.closest('.port');
+            if (targetPort && window.dragSource) {
+              const targetId = targetPort.getAttribute('data-person-id');
+              if (targetId !== window.dragSource) {
+                showRelationDialog(window.dragSource, targetId);
+              }
+            }
+            window.dragSource = null;
+          });
+
+        portUp.call(portDrag);
+        portDown.call(portDrag);
+
+        // Перетаскивание самой карточки
         const cardDrag = d3.drag()
-          .on('start', function(e) { svg.on('.zoom',null); window.draggedCard = { id: person.id, startX: pos.x, startY: pos.y, moved: false }; })
-          .on('drag', function(e) { window.draggedCard.moved = true; const c = d3.pointer(e, gMain.node()); card.attr('transform',`translate(${c[0]-cardWidth/2}, ${c[1]-cardHeight/2})`); })
-          .on('end', function(e) { svg.call(zoomBehavior); const dc = window.draggedCard; if(!dc) return; if(dc.moved) { nodePositions[dc.id] = { x: dc.startX + (e.x - dc.startX), y: dc.startY + (e.y - dc.startY) }; saveNodePositionsToData(); drawEdges(); } else { selectPerson(dc.id, nodePositions[dc.id]); } window.draggedCard=null; });
+          .on('start', function(event) {
+            svg.on('.zoom', null);
+            window.draggedCard = { id: person.id, startX: pos.x, startY: pos.y, moved: false };
+          })
+          .on('drag', function(event) {
+            window.draggedCard.moved = true;
+            const coords = d3.pointer(event, gMain.node());
+            card.attr('transform', `translate(${coords[0] - cardWidth/2}, ${coords[1] - cardHeight/2})`);
+          })
+          .on('end', function(event) {
+            svg.call(zoomBehavior);
+            const dc = window.draggedCard;
+            if (!dc) return;
+            if (dc.moved) {
+              nodePositions[dc.id] = { x: dc.startX + (event.x - dc.startX), y: dc.startY + (event.y - dc.startY) };
+              saveNodePositionsToData();
+              drawEdges();
+            } else {
+              selectPerson(dc.id, nodePositions[dc.id]);
+            }
+            window.draggedCard = null;
+          });
+
         card.call(cardDrag);
       });
 
       // Центрирование
-      const allX = treeData.persons.map(p => nodePositions[p.id]?.x || 0), allY = treeData.persons.map(p => nodePositions[p.id]?.y || 0);
+      const allX = treeData.persons.map(p => nodePositions[p.id]?.x || 0);
+      const allY = treeData.persons.map(p => nodePositions[p.id]?.y || 0);
       const minX = Math.min(...allX), maxX = Math.max(...allX), minY = Math.min(...allY), maxY = Math.max(...allY);
-      const scale = Math.min(width/(maxX-minX+200), height/(maxY-minY+200), 1.2);
-      const cx = (minX+maxX)/2, cy = (minY+maxY)/2;
-      svg.call(zoomBehavior.transform, d3.zoomIdentity.translate(width/2, height/2).scale(scale).translate(-cx, -cy));
+      const graphWidth = maxX - minX + 200, graphHeight = maxY - minY + 200;
+      const scale = Math.min(width / graphWidth, height / graphHeight, 1.2);
+      const centerX = (minX + maxX) / 2, centerY = (minY + maxY) / 2;
+      svg.call(zoomBehavior.transform, d3.zoomIdentity.translate(width/2, height/2).scale(scale).translate(-centerX, -centerY));
     }
 
     function selectPerson(personId, pos) {
-      // Снять предыдущее выделение
       d3.selectAll('.node-card').classed('selected', false);
-      if (selectedPersonId === personId) { clearSelection(); return; }
+      if (selectedPersonId === personId) {
+        clearSelection();
+        return;
+      }
       selectedPersonId = personId;
-      d3.selectAll('.node-card').each(function(d) {
+      d3.selectAll('.node-card').each(function() {
         const id = d3.select(this).datum();
         if (id === personId) d3.select(this).classed('selected', true);
       });
-      // Показать кнопки действий
       if (actionButtonsGroup) {
-        const cardWidth = 140;
-        actionButtonsGroup.attr('transform', `translate(${pos.x + cardWidth/2 + 10}, ${pos.y - 30})`);
-        actionButtonsGroup.style('visibility','visible');
+        actionButtonsGroup.attr('transform', `translate(${pos.x + 80}, ${pos.y - 20})`);
+        actionButtonsGroup.style('visibility', 'visible');
       }
     }
 
     function clearSelection() {
       selectedPersonId = null;
       d3.selectAll('.node-card').classed('selected', false);
-      if (actionButtonsGroup) actionButtonsGroup.style('visibility','hidden');
+      if (actionButtonsGroup) actionButtonsGroup.style('visibility', 'hidden');
     }
 
     function deleteSelectedPerson() {
@@ -492,133 +845,238 @@
       clearSelection();
       const rootExists = !!findRootPerson();
       setRootBtn.style.display = (!personId && !rootExists) ? 'inline-flex' : 'none';
+
       if (personId) {
-        const person = treeData.persons.find(p => p.id === personId); if (!person) return;
+        const person = treeData.persons.find(p => p.id === personId);
+        if (!person) return;
         personIdInput.value = person.id;
-        firstNameInput.value = person.firstName||''; lastNameInput.value = person.lastName||'';
-        patronymicInput.value = person.patronymic||''; roleInput.value = person.role||'';
+        firstNameInput.value = person.firstName || '';
+        lastNameInput.value = person.lastName || '';
+        patronymicInput.value = person.patronymic || '';
+        roleInput.value = person.role || '';
         roleField.style.display = 'block';
-        birthDateInput.value = person.birthDate||''; deathDateInput.value = person.deathDate||'';
-        genderInput.value = person.gender||'male';
-        document.querySelector(`.gender-btn[data-gender="${person.gender||'male'}"]`).classList.add('active');
-        document.querySelector(`.gender-btn:not([data-gender="${person.gender||'male'}"])`).classList.remove('active');
-        notesInput.value = person.notes||'';
+        birthDateInput.value = person.birthDate || '';
+        deathDateInput.value = person.deathDate || '';
+        genderInput.value = person.gender || 'male';
+        document.querySelector(`.gender-btn[data-gender="${person.gender || 'male'}"]`).classList.add('active');
+        document.querySelector(`.gender-btn:not([data-gender="${person.gender || 'male'}"])`).classList.remove('active');
+        notesInput.value = person.notes || '';
         photoPreview.innerHTML = person.photo ? `<img src="${person.photo}" style="max-width:80px; border-radius:50%;">` : '';
         document.getElementById('deletePersonBtn').style.display = 'inline-flex';
         document.getElementById('editTitle').textContent = 'Редактировать';
         isRootInput.value = person.isRoot ? 'true' : 'false';
       } else {
-        personIdInput.value = ''; firstNameInput.value = ''; lastNameInput.value = ''; patronymicInput.value = '';
-        roleInput.value = ''; roleField.style.display = 'none'; birthDateInput.value = ''; deathDateInput.value = '';
-        genderInput.value = 'male'; document.querySelector('.gender-btn[data-gender="male"]').classList.add('active');
+        personIdInput.value = '';
+        firstNameInput.value = '';
+        lastNameInput.value = '';
+        patronymicInput.value = '';
+        roleInput.value = '';
+        roleField.style.display = 'none';
+        birthDateInput.value = '';
+        deathDateInput.value = '';
+        genderInput.value = 'male';
+        document.querySelector('.gender-btn[data-gender="male"]').classList.add('active');
         document.querySelector('.gender-btn[data-gender="female"]').classList.remove('active');
-        notesInput.value = ''; photoPreview.innerHTML = ''; document.getElementById('deletePersonBtn').style.display = 'none';
-        document.getElementById('editTitle').textContent = 'Добавить человека'; isRootInput.value = 'false';
+        notesInput.value = '';
+        photoPreview.innerHTML = '';
+        document.getElementById('deletePersonBtn').style.display = 'none';
+        document.getElementById('editTitle').textContent = 'Добавить человека';
+        isRootInput.value = 'false';
       }
       editModal.classList.add('active');
     }
+
     function closeEditModal() { editModal.classList.remove('active'); }
+
     photoInput.addEventListener('change', (e) => {
-      const file = e.target.files[0]; if (!file) return;
-      const reader = new FileReader(); reader.onload = ev => { photoPreview.innerHTML = `<img src="${ev.target.result}" style="max-width:80px; border-radius:50%;">`; };
-      reader.readAsDataURL(file);
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => { photoPreview.innerHTML = `<img src="${ev.target.result}" style="max-width:80px; border-radius:50%;">`; };
+        reader.readAsDataURL(file);
+      }
     });
+
     setRootBtn.addEventListener('click', () => {
-      const newId = Date.now().toString(36)+Math.random().toString(36).substr(2,5);
+      const newId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
       const person = {
-        id: newId, firstName: firstNameInput.value.trim()||'Я', lastName: lastNameInput.value.trim()||'',
-        patronymic: patronymicInput.value.trim()||'', role: '', birthDate: birthDateInput.value, deathDate: deathDateInput.value,
-        gender: genderInput.value, notes: notesInput.value.trim(), photo: photoPreview.querySelector('img')?.src||'', isRoot: true
+        id: newId,
+        firstName: firstNameInput.value.trim() || 'Я',
+        lastName: lastNameInput.value.trim() || '',
+        patronymic: patronymicInput.value.trim() || '',
+        role: '',
+        birthDate: birthDateInput.value,
+        deathDate: deathDateInput.value,
+        gender: genderInput.value,
+        notes: notesInput.value.trim(),
+        photo: photoPreview.querySelector('img')?.src || '',
+        isRoot: true
       };
       treeData.persons.push(person);
       const startX = 400, startY = 300;
-      nodePositions[newId] = { x: startX, y: startY }; person.x = startX; person.y = startY;
-      saveNodePositionsToData(); saveToStorage(); closeEditModal(); renderAll();
+      nodePositions[newId] = { x: startX, y: startY };
+      person.x = startX;
+      person.y = startY;
+      saveNodePositionsToData();
+      saveToStorage();
+      closeEditModal();
+      renderAll();
     });
+
     function savePerson() {
       const id = personIdInput.value;
       const data = {
-        firstName: firstNameInput.value.trim(), lastName: lastNameInput.value.trim(), patronymic: patronymicInput.value.trim(),
-        role: roleInput.value.trim(), birthDate: birthDateInput.value, deathDate: deathDateInput.value,
-        gender: genderInput.value, notes: notesInput.value.trim(), photo: photoPreview.querySelector('img')?.src||'',
+        firstName: firstNameInput.value.trim(),
+        lastName: lastNameInput.value.trim(),
+        patronymic: patronymicInput.value.trim(),
+        role: roleInput.value.trim(),
+        birthDate: birthDateInput.value,
+        deathDate: deathDateInput.value,
+        gender: genderInput.value,
+        notes: notesInput.value.trim(),
+        photo: photoPreview.querySelector('img')?.src || '',
         isRoot: isRootInput.value === 'true'
       };
-      if (!data.firstName && !data.lastName) { alert('Введите имя или фамилию'); return; }
-      if (!id && treeData.persons.some(p => `${p.firstName||''} ${p.lastName||''} ${p.patronymic||''}`.toLowerCase().trim() === `${data.firstName} ${data.lastName} ${data.patronymic}`.toLowerCase().trim())) {
-        alert('Такой человек уже есть'); return;
+
+      if (!data.firstName && !data.lastName) {
+        alert('Введите хотя бы имя или фамилию');
+        return;
       }
+
+      if (!id && treeData.persons.some(p => `${p.firstName||''} ${p.lastName||''} ${p.patronymic||''}`.toLowerCase().trim() === `${data.firstName} ${data.lastName} ${data.patronymic}`.toLowerCase().trim())) {
+        alert('Человек с таким именем, фамилией и отчеством уже существует.');
+        return;
+      }
+
       if (id) {
         const idx = treeData.persons.findIndex(p => p.id === id);
         if (idx !== -1) treeData.persons[idx] = { ...treeData.persons[idx], ...data };
       } else {
-        const newId = Date.now().toString(36)+Math.random().toString(36).substr(2,5);
+        const newId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
         treeData.persons.push({ id: newId, ...data });
-        if (!nodePositions[newId]) { nodePositions[newId] = { x: 300+treeData.persons.length*50, y: 300+treeData.persons.length*20 }; }
+        if (!nodePositions[newId]) {
+          nodePositions[newId] = { x: 300 + treeData.persons.length * 50, y: 300 + treeData.persons.length * 20 };
+        }
       }
-      saveNodePositionsToData(); saveToStorage(); closeEditModal(); renderAll();
+
+      saveNodePositionsToData();
+      saveToStorage();
+      closeEditModal();
+      renderAll();
     }
+
     function showRelationDialog(sourceId, targetId) {
-      const source = treeData.persons.find(p => p.id === sourceId), target = treeData.persons.find(p => p.id === targetId);
+      const source = treeData.persons.find(p => p.id === sourceId);
+      const target = treeData.persons.find(p => p.id === targetId);
       if (!source || !target) return;
-      document.getElementById('relationTitle').textContent = `Связь: ${source.firstName||'?'} ↔ ${target.firstName||'?'}`;
-      const div = document.getElementById('relationButtons'); div.innerHTML = '';
-      const opts = [
-        { text: `${source.firstName||'?'} — родитель, ${target.firstName||'?'} — ребёнок`, type: 'parent', dir:1 },
-        { text: `${target.firstName||'?'} — родитель, ${source.firstName||'?'} — ребёнок`, type: 'parent', dir:2 },
-        { text: 'Супруги', type: 'spouse', dir:0 }
+
+      document.getElementById('relationTitle').textContent = `Связь: ${source.firstName || '?'} ↔ ${target.firstName || '?'}`;
+      const div = document.getElementById('relationButtons');
+      div.innerHTML = '';
+
+      const options = [
+        { text: `${source.firstName || '?'} — родитель, ${target.firstName || '?'} — ребёнок`, type: 'parent', dir: 1 },
+        { text: `${target.firstName || '?'} — родитель, ${source.firstName || '?'} — ребёнок`, type: 'parent', dir: 2 },
+        { text: 'Супруги', type: 'spouse', dir: 0 }
       ];
-      opts.forEach(o => {
-        const btn = document.createElement('button'); btn.className='glass-btn'; btn.textContent=o.text;
-        btn.onclick = () => { if(o.type==='parent') { if(o.dir===1) addRelation(sourceId,targetId,'parent'); else addRelation(targetId,sourceId,'parent'); } else addRelation(sourceId,targetId,'spouse'); closeRelationModal(); };
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'glass-btn';
+        btn.textContent = opt.text;
+        btn.onclick = () => {
+          if (opt.type === 'parent') {
+            if (opt.dir === 1) addRelation(sourceId, targetId, 'parent');
+            else addRelation(targetId, sourceId, 'parent');
+          } else {
+            addRelation(sourceId, targetId, 'spouse');
+          }
+          closeRelationModal();
+        };
         div.appendChild(btn);
       });
       relationModal.classList.add('active');
     }
+
     function closeRelationModal() { relationModal.classList.remove('active'); }
+
     function addRelation(p1, p2, type) {
       if (p1 === p2) return;
-      const exists = treeData.relationships.some(r => (r.type === type && r.person1 === p1 && r.person2 === p2) || (type==='spouse' && r.type==='spouse' && ((r.person1===p1&&r.person2===p2)||(r.person1===p2&&r.person2===p1))));
-      if (exists) { alert('Такая связь уже существует'); return; }
+      const exists = treeData.relationships.some(r =>
+        (r.type === type && r.person1 === p1 && r.person2 === p2) ||
+        (type === 'spouse' && r.type === 'spouse' && ((r.person1 === p1 && r.person2 === p2) || (r.person1 === p2 && r.person2 === p1)))
+      );
+      if (exists) {
+        alert('Такая связь уже существует');
+        return;
+      }
       treeData.relationships.push({ type, person1: p1, person2: p2 });
-      saveToStorage(); renderAll();
+      saveToStorage();
+      renderAll();
     }
 
-    // Обработчики
+    // ---------- Обработчики кнопок ----------
     document.getElementById('savePersonBtn').addEventListener('click', savePerson);
     document.getElementById('deletePersonBtn').addEventListener('click', deleteSelectedPerson);
     document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
     document.getElementById('closeModalBtn').addEventListener('click', closeEditModal);
-    editModal.addEventListener('click', e => { if(e.target === editModal) closeEditModal(); });
+    editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
     document.getElementById('cancelRelationBtn').addEventListener('click', closeRelationModal);
-    relationModal.addEventListener('click', e => { if(e.target === relationModal) closeRelationModal(); });
+    relationModal.addEventListener('click', (e) => { if (e.target === relationModal) closeRelationModal(); });
     document.getElementById('helpBtn').addEventListener('click', () => helpModal.classList.add('active'));
     document.getElementById('closeHelpBtn').addEventListener('click', () => helpModal.classList.remove('active'));
-    helpModal.addEventListener('click', e => { if(e.target === helpModal) helpModal.classList.remove('active'); });
+    helpModal.addEventListener('click', (e) => { if (e.target === helpModal) helpModal.classList.remove('active'); });
+
     document.getElementById('addPersonBtn').addEventListener('click', () => openEditModal(null));
-    document.getElementById('focusRootBtn').addEventListener('click', () => { loadNodePositionsFromData(); renderAll(); });
-    searchInput.addEventListener('input', e => { if(e.target.value) renderAll(); });
+    document.getElementById('focusRootBtn').addEventListener('click', () => {
+      loadNodePositionsFromData();
+      renderAll();
+    });
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      if (!q) return;
+      const found = treeData.persons.find(p => `${p.firstName} ${p.lastName}`.toLowerCase().includes(q));
+      if (found) renderAll();
+    });
     document.getElementById('lockBtn').addEventListener('click', lockApp);
     document.getElementById('exportBtn').addEventListener('click', () => {
-      const data = localStorage.getItem(STORAGE_KEY); if(!data) return;
-      const blob = new Blob([data], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'family_tree.json'; a.click();
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (!data) return alert('Нет данных');
+      const blob = new Blob([data], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'family_tree_encrypted.json';
+      a.click();
     });
     document.getElementById('importBtn').addEventListener('click', () => {
-      const inp = document.createElement('input'); inp.type='file'; inp.accept='.json'; inp.onchange = e => {
-        const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
-        reader.onload = ev => { localStorage.setItem(STORAGE_KEY, ev.target.result); lockApp(); }; reader.readAsText(file);
-      }; inp.click();
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => { localStorage.setItem(STORAGE_KEY, ev.target.result); lockApp(); };
+        reader.readAsText(file);
+      };
+      input.click();
     });
     document.getElementById('undoBtn').addEventListener('click', () => alert('В разработке'));
     document.getElementById('redoBtn').addEventListener('click', () => alert('В разработке'));
 
     passwordSubmit.addEventListener('click', handlePasswordSubmit);
-    passwordInput.addEventListener('keypress', e => { if(e.key==='Enter') handlePasswordSubmit(); });
-    loginInput.addEventListener('keypress', e => { if(e.key==='Enter') passwordInput.focus(); });
-    createNewLink.addEventListener('click', e => {
-      e.preventDefault(); localStorage.removeItem(STORAGE_KEY);
-      passTitle.textContent = 'Создайте новое древо'; createNewLink.style.display = 'none';
-      loginInput.value = ''; passwordInput.value = ''; updateSubmitButtonState(); loginInput.focus();
+    passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handlePasswordSubmit(); });
+    loginInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') passwordInput.focus(); });
+    createNewLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem(STORAGE_KEY);
+      passTitle.textContent = 'Создайте новое древо';
+      createNewLink.style.display = 'none';
+      loginInput.value = '';
+      passwordInput.value = '';
+      updateSubmitButtonState();
+      loginInput.focus();
     });
+
     checkStorageAndPrompt();
   })();
 </script>
