@@ -327,7 +327,7 @@
     let encryptionKey = false;
     let passwordSet = false;
     let currentLogin = '';
-    let currentPassword = '';   // <-- храним пароль для шифрования
+    let currentPassword = '';   // храним пароль
     let focusPersonId = null;
 
     const treeContainer = document.getElementById('treeContainer');
@@ -391,9 +391,17 @@
     }
 
     async function saveToStorage() {
-      if (!encryptionKey || !currentLogin || !currentPassword) return;
-      const encrypted = await encryptData(treeData, currentLogin, currentPassword);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(encrypted));
+      if (!encryptionKey || !currentLogin || !currentPassword) {
+        console.warn('Не могу сохранить: отсутствует ключ или пароль');
+        return;
+      }
+      try {
+        const encrypted = await encryptData(treeData, currentLogin, currentPassword);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(encrypted));
+      } catch (e) {
+        console.error('Ошибка сохранения:', e);
+        alert('Ошибка сохранения данных');
+      }
     }
 
     async function loadFromStorage(login, password) {
@@ -712,6 +720,7 @@
     });
 
     async function savePerson() {
+      console.log('savePerson called');
       const id = personIdInput.value;
       const data = {
         firstName: firstNameInput.value.trim(),
@@ -722,6 +731,11 @@
         notes: notesInput.value.trim(),
         photo: photoPreview.querySelector('img')?.src || ''
       };
+      console.log('data:', data);
+      if (!data.firstName && !data.lastName) {
+        alert('Введите хотя бы имя или фамилию');
+        return;
+      }
       if (id) {
         const idx = treeData.persons.findIndex(p => p.id === id);
         if (idx !== -1) treeData.persons[idx] = { ...treeData.persons[idx], ...data };
@@ -729,6 +743,7 @@
         const newId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
         treeData.persons.push({ id: newId, ...data });
       }
+      console.log('treeData after save:', treeData);
       await saveToStorage();
       closeEditModal();
       renderAll();
