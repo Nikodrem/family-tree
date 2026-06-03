@@ -213,10 +213,11 @@
     .relation-dialog h3 { margin-bottom: 12px; font-weight: 400; color: #2c3e50; }
     .relation-dialog button { margin: 6px; }
     .node-card {
-      cursor: pointer;
-      transition: filter 0.2s; /* убран transform, вызывавший смещение */
+      cursor: grab;
+      transition: filter 0.2s;
     }
-    .node-card:hover { filter: brightness(1.05); }
+    .node-card:active { cursor: grabbing; }
+    .node-card:hover { filter: brightness(1.03); }
     .port {
       cursor: crosshair;
       fill: rgba(100, 149, 237, 0.7);
@@ -556,19 +557,23 @@
 
       // Связи
       const edgesLayer = gMain.append('g');
-      treeData.relationships.forEach(rel => {
-        const sourcePos = nodePositions[rel.person1];
-        const targetPos = nodePositions[rel.person2];
-        if (sourcePos && targetPos) {
-          edgesLayer.append('line')
-            .attr('x1', sourcePos.x).attr('y1', sourcePos.y)
-            .attr('x2', targetPos.x).attr('y2', targetPos.y)
-            .attr('stroke', rel.type === 'spouse' ? '#ff9f43' : '#8395a7')
-            .attr('stroke-width', 2)
-            .attr('stroke-dasharray', rel.type === 'spouse' ? '6,4' : 'none')
-            .attr('marker-end', rel.type === 'parent' ? 'url(#arrowhead)' : '');
-        }
-      });
+      const drawEdges = () => {
+        edgesLayer.selectAll('*').remove();
+        treeData.relationships.forEach(rel => {
+          const sourcePos = nodePositions[rel.person1];
+          const targetPos = nodePositions[rel.person2];
+          if (sourcePos && targetPos) {
+            edgesLayer.append('line')
+              .attr('x1', sourcePos.x).attr('y1', sourcePos.y)
+              .attr('x2', targetPos.x).attr('y2', targetPos.y)
+              .attr('stroke', rel.type === 'spouse' ? '#ff9f43' : '#8395a7')
+              .attr('stroke-width', 2)
+              .attr('stroke-dasharray', rel.type === 'spouse' ? '6,4' : 'none')
+              .attr('marker-end', rel.type === 'parent' ? 'url(#arrowhead)' : '');
+          }
+        });
+      };
+      drawEdges();
 
       // Узлы
       const nodesLayer = gMain.append('g');
@@ -583,9 +588,9 @@
         card.append('rect')
           .attr('width', cardWidth).attr('height', cardHeight)
           .attr('rx', 14)
-          .attr('fill', 'rgba(255, 255, 255, 0.85)')
-          .attr('stroke', 'rgba(255,255,255,0.9)')
-          .attr('stroke-width', 2);
+          .attr('fill', '#ffffff') // сплошной белый
+          .attr('stroke', 'rgba(0,0,0,0.1)')
+          .attr('stroke-width', 1);
 
         if (person.photo) {
           card.append('image')
@@ -604,12 +609,7 @@
           .attr('fill', '#7f8c8d').attr('font-size', '10px')
           .text(getDisplayRole(person));
 
-        card.on('click', (event) => {
-          event.stopPropagation();
-          openDetailModal(person.id);
-        });
-
-        // Порты с надёжным отключением зума
+        // Порты (связи)
         const portUp = card.append('circle')
           .attr('cx', cardWidth/2).attr('cy', 0).attr('r', 8).attr('class', 'port')
           .attr('data-person-id', person.id);
@@ -617,9 +617,9 @@
           .attr('cx', cardWidth/2).attr('cy', cardHeight).attr('r', 8).attr('class', 'port')
           .attr('data-person-id', person.id);
 
-        const dragHandler = d3.drag()
+        const portDrag = d3.drag()
           .on('start', function(event) {
-            // Полностью отключаем зум, чтобы избежать конфликта
+            event.sourceEvent.stopPropagation(); // не даём начать перетаскивание карточки
             svg.on('.zoom', null);
             window.dragSource = person.id;
             const portCy = +d3.select(this).attr('cy');
@@ -641,7 +641,6 @@
           .on('end', function(event) {
             const line = gMain.select('#dragLine');
             if (!line.empty()) line.remove();
-            // Возвращаем зум после завершения перетаскивания
             svg.call(zoomBehavior);
             const targetEl = document.elementFromPoint(event.sourceEvent.clientX, event.sourceEvent.clientY);
             const targetPort = targetEl?.closest('.port');
@@ -654,8 +653,48 @@
             window.dragSource = null;
           });
 
-        portUp.call(dragHandler);
-        portDown.call(dragHandler);
+        portUp.call(portDrag);
+        portDown.call(portDrag);
+
+        // Перетаскивание самой карточки
+        const cardDrag = d3.drag()
+          .on('start', function(event) {
+            // не реагируем, если начали с порта (остановлено stopPropagation)
+            svg.on('.zoom', null);
+            // сохраняем начальную позицию
+            window.draggedCard = {
+              personId: person.id,
+              startX: pos.x,
+              startY: pos.y,
+              moved: false
+            };
+          })
+          .on('drag', function(event) {
+            window.draggedCard.moved = true;
+            const coords = d3.pointer(event, gMain.node());
+            const newX = coords[0] - cardWidth/2;
+            const newY = coords[1] - cardHeight/2;
+            card.attr('transform', `translate(${newX}, ${newY})`);
+          })
+          .on('end', function(event) {
+            svg.call(zoomBehavior);
+            const dragged = window.draggedCard;
+            if (!dragged) return;
+            if (dragged.moved) {
+              // обновляем позицию в nodePositions
+              const newX = dragged.startX + (event.x - dragged.startX);
+              const newY = dragged.startY + (event.y - dragged.startY);
+              nodePositions[dragged.personId].x = newX;
+              nodePositions[dragged.personId].y = newY;
+              drawEdges();
+            } else {
+              // короткий клик – открываем профиль
+              openDetailModal(dragged.personId);
+            }
+            window.draggedCard = null;
+          });
+
+        card.call(cardDrag);
       });
 
       // Центрирование
@@ -668,7 +707,7 @@
       svg.call(zoomBehavior.transform, d3.zoomIdentity.translate(width/2, height/2).scale(scale).translate(-centerX, -centerY));
     }
 
-    // Профиль
+    // ---------- Профиль и редактор ----------
     function openDetailModal(personId) {
       const person = treeData.persons.find(p => p.id === personId);
       if (!person) return;
@@ -687,7 +726,6 @@
       currentDetailId = null;
     }
 
-    // Редактор
     function openEditModal(personId = null) {
       if (personId) {
         const person = treeData.persons.find(p => p.id === personId);
@@ -756,17 +794,14 @@
         notes: notesInput.value.trim(),
         photo: photoPreview.querySelector('img')?.src || ''
       };
-
       if (!data.firstName && !data.lastName) {
         alert('Введите хотя бы имя или фамилию');
         return;
       }
-
       if (!id && isDuplicatePerson(data)) {
         alert('Человек с таким именем, фамилией и отчеством уже существует.');
         return;
       }
-
       if (id) {
         const idx = treeData.persons.findIndex(p => p.id === id);
         if (idx !== -1) treeData.persons[idx] = { ...treeData.persons[idx], ...data };
@@ -774,7 +809,6 @@
         const newId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
         treeData.persons.push({ id: newId, ...data });
       }
-
       calculateNodePositions();
       closeEditModal();
       renderAll();
@@ -835,7 +869,7 @@
       renderAll();
     }
 
-    // Обработчики кнопок
+    // ---------- Обработчики кнопок ----------
     document.getElementById('savePersonBtn').addEventListener('click', savePerson);
     document.getElementById('deletePersonBtn').addEventListener('click', deletePerson);
     document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
