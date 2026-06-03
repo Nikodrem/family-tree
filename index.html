@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Family Roots – Семейное древо</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -316,13 +315,14 @@
 
 <script>
   (function() {
+    // ---------- ДАННЫЕ ----------
     const STORAGE_KEY = 'encryptedFamilyTree';
     let treeData = { persons: [], relationships: [] };
     let passwordSet = false;
     let currentLogin = '';
     let currentPassword = '';
-    let focusPersonId = null;
 
+    // DOM
     const treeContainer = document.getElementById('treeContainer');
     const editModal = document.getElementById('editModal');
     const relationModal = document.getElementById('relationModal');
@@ -343,15 +343,16 @@
     const photoPreview = document.getElementById('photoPreview');
     const notesInput = document.getElementById('notes');
 
-    let svgSelection = null, gMain = null, zoomBehavior = null;
-    let dragSource = null, dragTarget = null;
+    // Позиции узлов (будем вычислять сами)
+    let nodePositions = {};
 
+    // Кнопка входа
     function updateSubmitButtonState() {
       passwordSubmit.classList.toggle('disabled', passwordInput.value.trim() === '');
     }
     passwordInput.addEventListener('input', updateSubmitButtonState);
 
-    // ---------- Шифрование ----------
+    // ---------- ШИФРОВАНИЕ ----------
     async function deriveKey(login, password, salt = null) {
       if (!salt) salt = crypto.getRandomValues(new Uint8Array(16));
       const combined = login + ':' + password;
@@ -386,13 +387,8 @@
     function saveToStorage() {
       if (!currentLogin || !currentPassword) return;
       encryptData(treeData, currentLogin, currentPassword)
-        .then(encrypted => {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(encrypted));
-        })
-        .catch(err => {
-          console.error('Ошибка сохранения:', err);
-          alert('Не удалось сохранить данные. Попробуйте позже.');
-        });
+        .then(enc => localStorage.setItem(STORAGE_KEY, JSON.stringify(enc)))
+        .catch(e => console.error('Ошибка сохранения', e));
     }
 
     async function loadFromStorage(login, password) {
@@ -401,7 +397,7 @@
       return await decryptData(JSON.parse(raw), login, password);
     }
 
-    // ---------- Вход ----------
+    // ---------- ВХОД ----------
     async function checkStorageAndPrompt() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -433,6 +429,7 @@
         currentPassword = pass;
         passwordSet = true;
         passwordOverlay.style.display = 'none';
+        calculateNodePositions();
         renderAll();
       } catch (e) {
         alert(e.message);
@@ -444,6 +441,7 @@
       currentLogin = '';
       currentPassword = '';
       treeData = { persons: [], relationships: [] };
+      nodePositions = {};
       passwordOverlay.style.display = 'flex';
       passTitle.textContent = 'Вход в семейное древо';
       createNewLink.style.display = 'inline';
@@ -453,7 +451,20 @@
       closeEditModal();
     }
 
-    // ---------- Рендеринг (исправлен для одного узла) ----------
+    // ---------- ПРОСТОЕ ПОЗИЦИОНИРОВАНИЕ УЗЛОВ (БЕЗ DAGRE) ----------
+    function calculateNodePositions() {
+      nodePositions = {};
+      if (treeData.persons.length === 0) return;
+      // Размещаем людей по горизонтали с отступом 200px, начиная с центра
+      const startX = 300;
+      const startY = 300;
+      const stepX = 200;
+      treeData.persons.forEach((p, i) => {
+        nodePositions[p.id] = { x: startX + i * stepX, y: startY };
+      });
+    }
+
+    // ---------- РЕНДЕРИНГ ----------
     function renderAll() {
       if (!passwordSet) return;
       treeContainer.innerHTML = '';
@@ -463,54 +474,15 @@
         return;
       }
 
-      // Всегда показываем всех, если нет фокуса
-      let nodesToShow = treeData.persons.map(p => p.id);
-      if (focusPersonId && treeData.persons.some(p => p.id === focusPersonId)) {
-        nodesToShow = [...new Set([focusPersonId, ...getAncestors(focusPersonId), ...getDescendants(focusPersonId), ...getSpouses(focusPersonId)])];
-      }
-
-      const g = new dagre.graphlib.Graph({ directed: true });
-      g.setDefaultEdgeLabel(() => ({}));
-      treeData.persons.forEach(p => g.setNode(p.id, {
-        label: `${p.firstName || '?'} ${p.lastName || ''}`.trim(),
-        person: p, width: 140, height: 60
-      }));
-      treeData.relationships.forEach(rel => {
-        if (rel.type === 'parent') g.setEdge(rel.person1, rel.person2, { lineStyle: 'parent' });
-        else if (rel.type === 'spouse') {
-          g.setEdge(rel.person1, rel.person2, { lineStyle: 'spouse' });
-          g.setEdge(rel.person2, rel.person1, { lineStyle: 'spouse' });
-        }
-      });
-
-      const filteredNodes = nodesToShow.filter(id => g.hasNode(id));
-      const filteredEdges = g.edges().filter(e => nodesToShow.includes(e.v) && nodesToShow.includes(e.w));
-
-      const subGraph = new dagre.graphlib.Graph({ directed: true });
-      subGraph.setDefaultEdgeLabel(() => ({}));
-      filteredNodes.forEach(id => subGraph.setNode(id, g.node(id)));
-      filteredEdges.forEach(e => subGraph.setEdge(e.v, e.w, g.edge(e)));
-
-      // Применяем раскладку, но если узел один, зададим координаты вручную
-      dagre.layout(subGraph, { rankdir: 'TB', nodesep: 40, ranksep: 60, marginx: 30, marginy: 30 });
-
-      // Дополнительно проверяем, что у узлов есть координаты (на случай бага dagre)
-      subGraph.nodes().forEach(id => {
-        const node = subGraph.node(id);
-        if (node.x === undefined || node.y === undefined) {
-          node.x = 200;
-          node.y = 100;
-        }
-      });
-
       const width = treeContainer.clientWidth || 800;
       const height = treeContainer.clientHeight || 600;
 
-      svgSelection = d3.select(treeContainer).append('svg')
+      const svg = d3.select(treeContainer).append('svg')
         .attr('width', width)
         .attr('height', height);
 
-      const defs = svgSelection.append('defs');
+      // Фон с точками
+      const defs = svg.append('defs');
       defs.append('pattern')
         .attr('id', 'dotPattern')
         .attr('patternUnits', 'userSpaceOnUse')
@@ -527,49 +499,53 @@
         .attr('orient', 'auto')
         .append('path').attr('d', 'M 0 0 L 10 5 L 0 10 Z').attr('fill', '#8395a7');
 
-      zoomBehavior = d3.zoom().scaleExtent([0.3, 3]).on('zoom', (event) => {
+      // Zoom поведение
+      const gMain = svg.append('g');
+      const zoomBehavior = d3.zoom().scaleExtent([0.3, 3]).on('zoom', (event) => {
         gMain.attr('transform', event.transform);
       });
-      svgSelection.call(zoomBehavior);
-      svgSelection.on('click', (event) => {
-        if (event.target === svgSelection.node()) closeEditModal();
+      svg.call(zoomBehavior);
+      svg.on('click', (event) => {
+        if (event.target === svg.node()) closeEditModal();
       });
 
-      gMain = svgSelection.append('g');
-
+      // Точечный фон
       gMain.append('rect')
         .attr('width', 20000).attr('height', 20000)
         .attr('x', -10000).attr('y', -10000)
         .attr('fill', 'url(#dotPattern)');
 
-      // Рёбра
+      // Рисуем связи (линии)
       const edgesLayer = gMain.append('g');
-      subGraph.edges().forEach(e => {
-        const points = subGraph.edge(e).points;
-        if (points && points.length > 1) {
-          const style = subGraph.edge(e).lineStyle;
-          edgesLayer.append('path')
-            .attr('d', d3.line().x(d => d.x).y(d => d.y)(points))
-            .attr('fill', 'none')
-            .attr('stroke', style === 'spouse' ? '#ff9f43' : '#8395a7')
+      treeData.relationships.forEach(rel => {
+        const sourcePos = nodePositions[rel.person1];
+        const targetPos = nodePositions[rel.person2];
+        if (sourcePos && targetPos) {
+          edgesLayer.append('line')
+            .attr('x1', sourcePos.x)
+            .attr('y1', sourcePos.y)
+            .attr('x2', targetPos.x)
+            .attr('y2', targetPos.y)
+            .attr('stroke', rel.type === 'spouse' ? '#ff9f43' : '#8395a7')
             .attr('stroke-width', 2)
-            .attr('stroke-dasharray', style === 'spouse' ? '6,4' : 'none')
-            .attr('marker-end', style === 'parent' ? 'url(#arrowhead)' : '');
+            .attr('stroke-dasharray', rel.type === 'spouse' ? '6,4' : 'none')
+            .attr('marker-end', rel.type === 'parent' ? 'url(#arrowhead)' : '');
         }
       });
 
-      // Узлы
+      // Рисуем узлы
       const nodesLayer = gMain.append('g');
-      subGraph.nodes().forEach(nodeId => {
-        const node = subGraph.node(nodeId);
-        const person = node.person;
+      treeData.persons.forEach(person => {
+        const pos = nodePositions[person.id];
+        if (!pos) return;
+        const cardWidth = 140, cardHeight = 60;
         const card = nodesLayer.append('g')
           .attr('class', 'node-card')
-          .attr('transform', `translate(${node.x - node.width/2}, ${node.y - node.height/2})`);
+          .attr('transform', `translate(${pos.x - cardWidth/2}, ${pos.y - cardHeight/2})`);
 
         card.append('rect')
-          .attr('width', node.width)
-          .attr('height', node.height)
+          .attr('width', cardWidth)
+          .attr('height', cardHeight)
           .attr('rx', 14)
           .attr('fill', 'rgba(255, 255, 255, 0.85)')
           .attr('stroke', 'rgba(255,255,255,0.9)')
@@ -597,27 +573,28 @@
           openEditModal(person.id);
         });
 
+        // Порты для drag-and-drop
         const portUp = card.append('circle')
-          .attr('cx', node.width/2).attr('cy', 0)
+          .attr('cx', cardWidth/2).attr('cy', 0)
           .attr('r', 8).attr('class', 'port')
-          .attr('data-person-id', person.id).attr('data-port', 'up');
-
+          .attr('data-person-id', person.id);
         const portDown = card.append('circle')
-          .attr('cx', node.width/2).attr('cy', node.height)
+          .attr('cx', cardWidth/2).attr('cy', cardHeight)
           .attr('r', 8).attr('class', 'port')
-          .attr('data-person-id', person.id).attr('data-port', 'down');
+          .attr('data-person-id', person.id);
 
         [portUp, portDown].forEach(port => {
           port.call(d3.drag()
             .on('start', function(event) {
-              dragSource = d3.select(this).attr('data-person-id');
+              window.dragSource = d3.select(this).attr('data-person-id');
               gMain.append('line')
                 .attr('id', 'dragLine')
-                .attr('x1', +d3.select(this).attr('cx') + node.x - node.width/2)
-                .attr('y1', +d3.select(this).attr('cy') + node.y - node.height/2)
-                .attr('x2', +d3.select(this).attr('cx') + node.x - node.width/2)
-                .attr('y2', +d3.select(this).attr('cy') + node.y - node.height/2)
-                .attr('stroke', '#ff9f43').attr('stroke-width', 2)
+                .attr('x1', pos.x)
+                .attr('y1', pos.y)
+                .attr('x2', pos.x)
+                .attr('y2', pos.y)
+                .attr('stroke', '#ff9f43')
+                .attr('stroke-width', 2)
                 .attr('stroke-dasharray', '5,3');
             })
             .on('drag', function(event) {
@@ -627,66 +604,37 @@
             .on('end', function(event) {
               const line = gMain.select('#dragLine');
               if (!line.empty()) line.remove();
-              const targetElement = document.elementFromPoint(event.sourceEvent.clientX, event.sourceEvent.clientY);
-              const targetPort = targetElement?.closest('.port');
-              if (targetPort && dragSource && targetPort.getAttribute('data-person-id') !== dragSource) {
-                dragTarget = targetPort.getAttribute('data-person-id');
-                showRelationDialog(dragSource, dragTarget);
+              const targetEl = document.elementFromPoint(event.sourceEvent.clientX, event.sourceEvent.clientY);
+              const targetPort = targetEl?.closest('.port');
+              if (targetPort && window.dragSource) {
+                const targetId = targetPort.getAttribute('data-person-id');
+                if (targetId !== window.dragSource) {
+                  showRelationDialog(window.dragSource, targetId);
+                }
               }
-              dragSource = null;
+              window.dragSource = null;
             })
           );
         });
       });
 
-      // Центрирование содержимого
-      if (subGraph.nodes().length > 0) {
-        const bounds = subGraph.nodes().reduce((acc, id) => {
-          const n = subGraph.node(id);
-          return {
-            minX: Math.min(acc.minX, n.x - n.width/2),
-            maxX: Math.max(acc.maxX, n.x + n.width/2),
-            minY: Math.min(acc.minY, n.y - n.height/2),
-            maxY: Math.max(acc.maxY, n.y + n.height/2)
-          };
-        }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
-
-        const graphWidth = bounds.maxX - bounds.minX + 80;
-        const graphHeight = bounds.maxY - bounds.minY + 80;
-        const scale = Math.min(width / graphWidth, height / graphHeight, 1.2);
-        const centerX = (bounds.minX + bounds.maxX) / 2;
-        const centerY = (bounds.minY + bounds.maxY) / 2;
-
-        svgSelection.call(zoomBehavior.transform, d3.zoomIdentity.translate(width/2, height/2).scale(scale).translate(-centerX, -centerY));
-      }
+      // Центрируем вид
+      const allX = treeData.persons.map(p => nodePositions[p.id]?.x || 0);
+      const allY = treeData.persons.map(p => nodePositions[p.id]?.y || 0);
+      const minX = Math.min(...allX);
+      const maxX = Math.max(...allX);
+      const minY = Math.min(...allY);
+      const maxY = Math.max(...allY);
+      const graphWidth = maxX - minX + 200;
+      const graphHeight = maxY - minY + 200;
+      const scale = Math.min(width / graphWidth, height / graphHeight, 1.2);
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+      const transform = d3.zoomIdentity.translate(width/2, height/2).scale(scale).translate(-centerX, -centerY);
+      svg.call(zoomBehavior.transform, transform);
     }
 
-    function getAncestors(id) {
-      const set = new Set(), stack = [id];
-      while (stack.length) {
-        const curr = stack.pop();
-        treeData.relationships.filter(r => r.type === 'parent' && r.person2 === curr).forEach(r => {
-          if (!set.has(r.person1)) { set.add(r.person1); stack.push(r.person1); }
-        });
-      }
-      return [...set];
-    }
-    function getDescendants(id) {
-      const set = new Set(), stack = [id];
-      while (stack.length) {
-        const curr = stack.pop();
-        treeData.relationships.filter(r => r.type === 'parent' && r.person1 === curr).forEach(r => {
-          if (!set.has(r.person2)) { set.add(r.person2); stack.push(r.person2); }
-        });
-      }
-      return [...set];
-    }
-    function getSpouses(id) {
-      return treeData.relationships.filter(r => r.type === 'spouse' && (r.person1 === id || r.person2 === id))
-        .map(r => r.person1 === id ? r.person2 : r.person1);
-    }
-
-    // ---------- Редактирование ----------
+    // ---------- РЕДАКТИРОВАНИЕ ----------
     function openEditModal(personId = null) {
       if (personId) {
         const person = treeData.persons.find(p => p.id === personId);
@@ -741,31 +689,31 @@
 
       if (id) {
         const idx = treeData.persons.findIndex(p => p.id === id);
-        if (idx !== -1) {
-          treeData.persons[idx] = { ...treeData.persons[idx], ...data };
-        }
+        if (idx !== -1) treeData.persons[idx] = { ...treeData.persons[idx], ...data };
       } else {
         const newId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
         treeData.persons.push({ id: newId, ...data });
       }
 
+      calculateNodePositions(); // пересчитываем позиции
       closeEditModal();
       renderAll();
       saveToStorage();
     }
 
-    async function deletePerson() {
+    function deletePerson() {
       const id = personIdInput.value;
       if (!id) return;
       if (!confirm('Удалить этого человека и все его связи?')) return;
       treeData.persons = treeData.persons.filter(p => p.id !== id);
       treeData.relationships = treeData.relationships.filter(r => r.person1 !== id && r.person2 !== id);
-      if (focusPersonId === id) focusPersonId = null;
+      calculateNodePositions();
       saveToStorage();
       closeEditModal();
       renderAll();
     }
 
+    // Связи
     function showRelationDialog(sourceId, targetId) {
       const source = treeData.persons.find(p => p.id === sourceId);
       const target = treeData.persons.find(p => p.id === targetId);
@@ -799,7 +747,6 @@
 
     function closeRelationModal() {
       relationModal.classList.remove('active');
-      dragSource = dragTarget = null;
     }
 
     function addRelation(person1, person2, type) {
@@ -814,7 +761,7 @@
       renderAll();
     }
 
-    // ---------- Обработчики ----------
+    // ---------- ОБРАБОТЧИКИ КНОПОК ----------
     document.getElementById('savePersonBtn').addEventListener('click', savePerson);
     document.getElementById('deletePersonBtn').addEventListener('click', deletePerson);
     document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
@@ -824,12 +771,18 @@
     relationModal.addEventListener('click', (e) => { if (e.target === relationModal) closeRelationModal(); });
 
     document.getElementById('addPersonBtn').addEventListener('click', () => openEditModal(null));
-    document.getElementById('focusRootBtn').addEventListener('click', () => { focusPersonId = null; renderAll(); });
+    document.getElementById('focusRootBtn').addEventListener('click', () => {
+      calculateNodePositions();
+      renderAll();
+    });
     searchInput.addEventListener('input', (e) => {
       const q = e.target.value.toLowerCase();
-      if (!q) { focusPersonId = null; renderAll(); return; }
+      if (!q) { renderAll(); return; }
       const found = treeData.persons.find(p => `${p.firstName} ${p.lastName}`.toLowerCase().includes(q));
-      if (found) { focusPersonId = found.id; renderAll(); }
+      if (found) {
+        // Подсвечиваем? Пока просто перерисовываем с центровкой
+        renderAll();
+      }
     });
     document.getElementById('lockBtn').addEventListener('click', lockApp);
     document.getElementById('exportBtn').addEventListener('click', () => {
@@ -853,8 +806,8 @@
       };
       input.click();
     });
-    document.getElementById('undoBtn').addEventListener('click', () => alert('Отмена в разработке'));
-    document.getElementById('redoBtn').addEventListener('click', () => alert('Повтор в разработке'));
+    document.getElementById('undoBtn').addEventListener('click', () => alert('В разработке'));
+    document.getElementById('redoBtn').addEventListener('click', () => alert('В разработке'));
 
     passwordSubmit.addEventListener('click', handlePasswordSubmit);
     passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handlePasswordSubmit(); });
