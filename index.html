@@ -385,14 +385,13 @@
 
     function saveToStorage() {
       if (!currentLogin || !currentPassword) return;
-      // Запускаем асинхронно, ошибки не должны ломать интерфейс
       encryptData(treeData, currentLogin, currentPassword)
         .then(encrypted => {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(encrypted));
         })
         .catch(err => {
           console.error('Ошибка сохранения:', err);
-          alert('Не удалось сохранить данные. Возможно, проблемы с шифрованием.');
+          alert('Не удалось сохранить данные. Попробуйте позже.');
         });
     }
 
@@ -454,7 +453,7 @@
       closeEditModal();
     }
 
-    // ---------- Рендеринг ----------
+    // ---------- Рендеринг (исправлен для одного узла) ----------
     function renderAll() {
       if (!passwordSet) return;
       treeContainer.innerHTML = '';
@@ -462,6 +461,12 @@
       if (treeData.persons.length === 0) {
         treeContainer.innerHTML = '<div class="empty-tree-message">Нажмите «+» чтобы добавить первого человека</div>';
         return;
+      }
+
+      // Всегда показываем всех, если нет фокуса
+      let nodesToShow = treeData.persons.map(p => p.id);
+      if (focusPersonId && treeData.persons.some(p => p.id === focusPersonId)) {
+        nodesToShow = [...new Set([focusPersonId, ...getAncestors(focusPersonId), ...getDescendants(focusPersonId), ...getSpouses(focusPersonId)])];
       }
 
       const g = new dagre.graphlib.Graph({ directed: true });
@@ -478,18 +483,25 @@
         }
       });
 
-      let nodesToShow = treeData.persons.map(p => p.id);
-      if (focusPersonId) {
-        nodesToShow = [...new Set([focusPersonId, ...getAncestors(focusPersonId), ...getDescendants(focusPersonId), ...getSpouses(focusPersonId)])];
-      }
-
       const filteredNodes = nodesToShow.filter(id => g.hasNode(id));
       const filteredEdges = g.edges().filter(e => nodesToShow.includes(e.v) && nodesToShow.includes(e.w));
+
       const subGraph = new dagre.graphlib.Graph({ directed: true });
       subGraph.setDefaultEdgeLabel(() => ({}));
       filteredNodes.forEach(id => subGraph.setNode(id, g.node(id)));
       filteredEdges.forEach(e => subGraph.setEdge(e.v, e.w, g.edge(e)));
+
+      // Применяем раскладку, но если узел один, зададим координаты вручную
       dagre.layout(subGraph, { rankdir: 'TB', nodesep: 40, ranksep: 60, marginx: 30, marginy: 30 });
+
+      // Дополнительно проверяем, что у узлов есть координаты (на случай бага dagre)
+      subGraph.nodes().forEach(id => {
+        const node = subGraph.node(id);
+        if (node.x === undefined || node.y === undefined) {
+          node.x = 200;
+          node.y = 100;
+        }
+      });
 
       const width = treeContainer.clientWidth || 800;
       const height = treeContainer.clientHeight || 600;
@@ -530,6 +542,7 @@
         .attr('x', -10000).attr('y', -10000)
         .attr('fill', 'url(#dotPattern)');
 
+      // Рёбра
       const edgesLayer = gMain.append('g');
       subGraph.edges().forEach(e => {
         const points = subGraph.edge(e).points;
@@ -545,6 +558,7 @@
         }
       });
 
+      // Узлы
       const nodesLayer = gMain.append('g');
       subGraph.nodes().forEach(nodeId => {
         const node = subGraph.node(nodeId);
@@ -625,6 +639,7 @@
         });
       });
 
+      // Центрирование содержимого
       if (subGraph.nodes().length > 0) {
         const bounds = subGraph.nodes().reduce((acc, id) => {
           const n = subGraph.node(id);
@@ -635,11 +650,13 @@
             maxY: Math.max(acc.maxY, n.y + n.height/2)
           };
         }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
+
         const graphWidth = bounds.maxX - bounds.minX + 80;
         const graphHeight = bounds.maxY - bounds.minY + 80;
         const scale = Math.min(width / graphWidth, height / graphHeight, 1.2);
         const centerX = (bounds.minX + bounds.maxX) / 2;
         const centerY = (bounds.minY + bounds.maxY) / 2;
+
         svgSelection.call(zoomBehavior.transform, d3.zoomIdentity.translate(width/2, height/2).scale(scale).translate(-centerX, -centerY));
       }
     }
@@ -669,7 +686,7 @@
         .map(r => r.person1 === id ? r.person2 : r.person1);
     }
 
-    // ---------- Редактирование человека (НОВАЯ НАДЁЖНАЯ МЕХАНИКА) ----------
+    // ---------- Редактирование ----------
     function openEditModal(personId = null) {
       if (personId) {
         const person = treeData.persons.find(p => p.id === personId);
@@ -710,7 +727,6 @@
       }
     });
 
-    // НОВАЯ функция сохранения — синхронное обновление данных, модалка закрывается сразу
     function savePerson() {
       const id = personIdInput.value;
       const data = {
@@ -733,10 +749,8 @@
         treeData.persons.push({ id: newId, ...data });
       }
 
-      // Закрываем окно и перерисовываем дерево немедленно
       closeEditModal();
       renderAll();
-      // Фоновое сохранение
       saveToStorage();
     }
 
@@ -752,7 +766,6 @@
       renderAll();
     }
 
-    // Связи drag-and-drop
     function showRelationDialog(sourceId, targetId) {
       const source = treeData.persons.find(p => p.id === sourceId);
       const target = treeData.persons.find(p => p.id === targetId);
