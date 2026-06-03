@@ -454,11 +454,11 @@
           const childPos = nodePositions[rel.person2];
           if (!parentPos || !childPos) return;
           if (rel.type === 'parent') {
-            // Линия от нижнего порта родителя к верхнему порту ребёнка
+            // от нижнего порта родителя к верхнему порту ребёнка
             const x1 = parentPos.x;
-            const y1 = parentPos.y + 30;
+            const y1 = parentPos.y + 30;  // нижний порт
             const x2 = childPos.x;
-            const y2 = childPos.y - 30;
+            const y2 = childPos.y - 30;   // верхний порт
             edgesLayer.append('line')
               .attr('x1', x1).attr('y1', y1)
               .attr('x2', x2).attr('y2', y2)
@@ -606,7 +606,7 @@
         portUp.call(portDrag);
         portDown.call(portDrag);
 
-        // Перетаскивание карточки (с обновлением связей)
+        // Перетаскивание карточки
         const cardDrag = d3.drag()
           .on('start', function(event) {
             svg.on('.zoom', null);
