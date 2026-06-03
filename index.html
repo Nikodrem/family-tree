@@ -130,20 +130,51 @@
       transition: all 0.3s ease;
     }
     .modal-overlay.active { visibility: visible; opacity: 1; }
-    .edit-panel {
+    .edit-panel, .detail-panel {
       background: rgba(255, 255, 255, 0.8);
       backdrop-filter: blur(25px);
       border: 1px solid rgba(255, 255, 255, 0.5);
       border-radius: 28px;
       box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
       padding: 28px;
-      width: 400px;
+      width: 420px;
       max-width: 90vw;
       max-height: 85vh;
       overflow-y: auto;
       position: relative;
     }
-    .edit-panel h3 { margin-bottom: 18px; font-weight: 400; color: #2c3e50; }
+    .detail-panel .person-photo {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: rgba(100,149,237,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 2rem;
+      color: #2c3e50;
+    }
+    .detail-panel .person-name {
+      font-size: 1.6rem;
+      font-weight: 400;
+      text-align: center;
+      color: #2c3e50;
+    }
+    .detail-panel .person-role {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      margin-bottom: 16px;
+    }
+    .detail-panel .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+    .detail-panel .info-label { color: #7f8c8d; }
+    .detail-panel .info-value { color: #2c3e50; font-weight: 500; }
+    .edit-panel h3, .detail-panel h3 { margin-bottom: 18px; font-weight: 400; color: #2c3e50; }
     .edit-panel label { display: block; margin-bottom: 6px; font-size: 0.8rem; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; }
     .edit-panel input, .edit-panel textarea, .edit-panel select {
       width: 100%;
@@ -232,7 +263,7 @@
     }
     .password-dialog input:last-of-type { margin-bottom: 20px; }
     @media (max-width: 700px) {
-      .edit-panel { width: 95vw; }
+      .edit-panel, .detail-panel { width: 95vw; }
       .header-top h1 { font-size: 1.2rem; }
       .search-box { width: 120px; }
     }
@@ -260,6 +291,24 @@
   </header>
   <div class="tree-area" id="treeContainer"></div>
 
+  <!-- Просмотр человека (профиль) -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="detail-panel">
+      <button class="close-modal-btn" id="closeDetailBtn">&times;</button>
+      <div class="person-photo" id="detailPhoto"></div>
+      <div class="person-name" id="detailName"></div>
+      <div class="person-role" id="detailRole"></div>
+      <div class="info-row"><span class="info-label">Дата рождения</span><span class="info-value" id="detailBirth"></span></div>
+      <div class="info-row"><span class="info-label">Дата смерти</span><span class="info-value" id="detailDeath"></span></div>
+      <div class="info-row"><span class="info-label">Заметки</span><span class="info-value" id="detailNotes"></span></div>
+      <div style="margin-top: 16px; display: flex; gap: 8px;">
+        <button class="glass-btn primary" id="editFromDetailBtn">Редактировать</button>
+        <button class="glass-btn" id="closeDetailBtn2">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Редактирование человека -->
   <div class="modal-overlay" id="editModal">
     <div class="edit-panel">
       <button class="close-modal-btn" id="closeModalBtn">&times;</button>
@@ -269,10 +318,14 @@
       <input type="text" id="firstName" placeholder="Имя">
       <label>Фамилия</label>
       <input type="text" id="lastName" placeholder="Фамилия">
+      <label>Отчество</label>
+      <input type="text" id="patronymic" placeholder="Отчество">
       <div class="row">
         <div><label>Дата рождения</label><input type="date" id="birthDate"></div>
         <div><label>Дата смерти</label><input type="date" id="deathDate"></div>
       </div>
+      <label>Роль (статус)</label>
+      <input type="text" id="role" placeholder="Например: муж, жена, дед">
       <label>Пол</label>
       <select id="gender">
         <option value="male">Мужской</option>
@@ -315,16 +368,18 @@
 
 <script>
   (function() {
-    // ---------- ДАННЫЕ ----------
     const STORAGE_KEY = 'encryptedFamilyTree';
     let treeData = { persons: [], relationships: [] };
     let passwordSet = false;
     let currentLogin = '';
     let currentPassword = '';
+    let nodePositions = {};
+    let currentDetailId = null;
 
     // DOM
     const treeContainer = document.getElementById('treeContainer');
     const editModal = document.getElementById('editModal');
+    const detailModal = document.getElementById('detailModal');
     const relationModal = document.getElementById('relationModal');
     const passwordOverlay = document.getElementById('passwordOverlay');
     const loginInput = document.getElementById('loginInput');
@@ -336,15 +391,14 @@
     const personIdInput = document.getElementById('personId');
     const firstNameInput = document.getElementById('firstName');
     const lastNameInput = document.getElementById('lastName');
+    const patronymicInput = document.getElementById('patronymic');
+    const roleInput = document.getElementById('role');
     const birthDateInput = document.getElementById('birthDate');
     const deathDateInput = document.getElementById('deathDate');
     const genderInput = document.getElementById('gender');
     const photoInput = document.getElementById('photoInput');
     const photoPreview = document.getElementById('photoPreview');
     const notesInput = document.getElementById('notes');
-
-    // Позиции узлов (будем вычислять сами)
-    let nodePositions = {};
 
     // Кнопка входа
     function updateSubmitButtonState() {
@@ -356,13 +410,8 @@
     async function deriveKey(login, password, salt = null) {
       if (!salt) salt = crypto.getRandomValues(new Uint8Array(16));
       const combined = login + ':' + password;
-      const keyMaterial = await crypto.subtle.importKey(
-        'raw', new TextEncoder().encode(combined), 'PBKDF2', false, ['deriveKey']
-      );
-      return await crypto.subtle.deriveKey(
-        { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
-        keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
-      );
+      const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(combined), 'PBKDF2', false, ['deriveKey']);
+      return await crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
     }
 
     async function encryptData(data, login, password) {
@@ -370,10 +419,7 @@
       const iv = crypto.getRandomValues(new Uint8Array(12));
       const encoded = new TextEncoder().encode(JSON.stringify(data));
       const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded);
-      return {
-        login,
-        payload: JSON.stringify({ salt: Array.from(salt), iv: Array.from(iv), data: Array.from(new Uint8Array(encrypted)) })
-      };
+      return { login, payload: JSON.stringify({ salt: Array.from(salt), iv: Array.from(iv), data: Array.from(new Uint8Array(encrypted)) }) };
     }
 
     async function decryptData(stored, login, password) {
@@ -420,20 +466,15 @@
       if (!login || !pass) return alert('Введите логин и пароль');
       const raw = localStorage.getItem(STORAGE_KEY);
       try {
-        if (raw) {
-          treeData = await decryptData(JSON.parse(raw), login, pass);
-        } else {
-          treeData = { persons: [], relationships: [] };
-        }
+        if (raw) treeData = await decryptData(JSON.parse(raw), login, pass);
+        else treeData = { persons: [], relationships: [] };
         currentLogin = login;
         currentPassword = pass;
         passwordSet = true;
         passwordOverlay.style.display = 'none';
         calculateNodePositions();
         renderAll();
-      } catch (e) {
-        alert(e.message);
-      }
+      } catch (e) { alert(e.message); }
     }
 
     function lockApp() {
@@ -449,16 +490,14 @@
       passwordInput.value = '';
       updateSubmitButtonState();
       closeEditModal();
+      closeDetailModal();
     }
 
-    // ---------- ПРОСТОЕ ПОЗИЦИОНИРОВАНИЕ УЗЛОВ (БЕЗ DAGRE) ----------
+    // ---------- ПОЗИЦИИ УЗЛОВ ----------
     function calculateNodePositions() {
       nodePositions = {};
       if (treeData.persons.length === 0) return;
-      // Размещаем людей по горизонтали с отступом 200px, начиная с центра
-      const startX = 300;
-      const startY = 300;
-      const stepX = 200;
+      const startX = 300, startY = 300, stepX = 200;
       treeData.persons.forEach((p, i) => {
         nodePositions[p.id] = { x: startX + i * stepX, y: startY };
       });
@@ -468,7 +507,6 @@
     function renderAll() {
       if (!passwordSet) return;
       treeContainer.innerHTML = '';
-
       if (treeData.persons.length === 0) {
         treeContainer.innerHTML = '<div class="empty-tree-message">Нажмите «+» чтобы добавить первого человека</div>';
         return;
@@ -476,20 +514,16 @@
 
       const width = treeContainer.clientWidth || 800;
       const height = treeContainer.clientHeight || 600;
+      const svg = d3.select(treeContainer).append('svg').attr('width', width).attr('height', height);
 
-      const svg = d3.select(treeContainer).append('svg')
-        .attr('width', width)
-        .attr('height', height);
-
-      // Фон с точками
       const defs = svg.append('defs');
       defs.append('pattern')
         .attr('id', 'dotPattern')
         .attr('patternUnits', 'userSpaceOnUse')
         .attr('width', 20).attr('height', 20)
         .append('circle')
-        .attr('cx', 10).attr('cy', 10).attr('r', 1.8)
-        .attr('fill', 'rgba(44, 62, 80, 0.3)');
+        .attr('cx', 10).attr('cy', 10).attr('r', 1.0)
+        .attr('fill', 'rgba(44, 62, 80, 0.2)');
 
       defs.append('marker')
         .attr('id', 'arrowhead')
@@ -499,33 +533,29 @@
         .attr('orient', 'auto')
         .append('path').attr('d', 'M 0 0 L 10 5 L 0 10 Z').attr('fill', '#8395a7');
 
-      // Zoom поведение
       const gMain = svg.append('g');
       const zoomBehavior = d3.zoom().scaleExtent([0.3, 3]).on('zoom', (event) => {
         gMain.attr('transform', event.transform);
       });
       svg.call(zoomBehavior);
       svg.on('click', (event) => {
-        if (event.target === svg.node()) closeEditModal();
+        if (event.target === svg.node()) closeDetailModal();
       });
 
-      // Точечный фон
       gMain.append('rect')
         .attr('width', 20000).attr('height', 20000)
         .attr('x', -10000).attr('y', -10000)
         .attr('fill', 'url(#dotPattern)');
 
-      // Рисуем связи (линии)
+      // Связи
       const edgesLayer = gMain.append('g');
       treeData.relationships.forEach(rel => {
         const sourcePos = nodePositions[rel.person1];
         const targetPos = nodePositions[rel.person2];
         if (sourcePos && targetPos) {
           edgesLayer.append('line')
-            .attr('x1', sourcePos.x)
-            .attr('y1', sourcePos.y)
-            .attr('x2', targetPos.x)
-            .attr('y2', targetPos.y)
+            .attr('x1', sourcePos.x).attr('y1', sourcePos.y)
+            .attr('x2', targetPos.x).attr('y2', targetPos.y)
             .attr('stroke', rel.type === 'spouse' ? '#ff9f43' : '#8395a7')
             .attr('stroke-width', 2)
             .attr('stroke-dasharray', rel.type === 'spouse' ? '6,4' : 'none')
@@ -533,7 +563,7 @@
         }
       });
 
-      // Рисуем узлы
+      // Узлы
       const nodesLayer = gMain.append('g');
       treeData.persons.forEach(person => {
         const pos = nodePositions[person.id];
@@ -544,8 +574,7 @@
           .attr('transform', `translate(${pos.x - cardWidth/2}, ${pos.y - cardHeight/2})`);
 
         card.append('rect')
-          .attr('width', cardWidth)
-          .attr('height', cardHeight)
+          .attr('width', cardWidth).attr('height', cardHeight)
           .attr('rx', 14)
           .attr('fill', 'rgba(255, 255, 255, 0.85)')
           .attr('stroke', 'rgba(255,255,255,0.9)')
@@ -559,82 +588,105 @@
             .attr('href', person.photo);
         }
 
+        // Имя и фамилия (bold)
         card.append('text')
           .attr('x', person.photo ? 40 : 12).attr('y', 24)
-          .attr('fill', '#2c3e50').attr('font-size', '12px').attr('font-weight', '500')
-          .text(person.firstName || '???');
+          .attr('fill', '#2c3e50').attr('font-size', '12px').attr('font-weight', '600')
+          .text(`${person.firstName || '?'} ${person.lastName || ''}`.trim());
+        // Роль (серая)
+        const roleText = person.role || '';
         card.append('text')
           .attr('x', person.photo ? 40 : 12).attr('y', 42)
           .attr('fill', '#7f8c8d').attr('font-size', '10px')
-          .text(person.lastName || '');
+          .text(roleText);
 
+        // Клик открывает профиль
         card.on('click', (event) => {
           event.stopPropagation();
-          openEditModal(person.id);
+          openDetailModal(person.id);
         });
 
-        // Порты для drag-and-drop
+        // Порты
+        const portUpY = pos.y - cardHeight/2;
+        const portDownY = pos.y + cardHeight/2;
         const portUp = card.append('circle')
-          .attr('cx', cardWidth/2).attr('cy', 0)
-          .attr('r', 8).attr('class', 'port')
+          .attr('cx', cardWidth/2).attr('cy', 0).attr('r', 8).attr('class', 'port')
           .attr('data-person-id', person.id);
         const portDown = card.append('circle')
-          .attr('cx', cardWidth/2).attr('cy', cardHeight)
-          .attr('r', 8).attr('class', 'port')
+          .attr('cx', cardWidth/2).attr('cy', cardHeight).attr('r', 8).attr('class', 'port')
           .attr('data-person-id', person.id);
 
-        [portUp, portDown].forEach(port => {
-          port.call(d3.drag()
-            .on('start', function(event) {
-              window.dragSource = d3.select(this).attr('data-person-id');
-              gMain.append('line')
-                .attr('id', 'dragLine')
-                .attr('x1', pos.x)
-                .attr('y1', pos.y)
-                .attr('x2', pos.x)
-                .attr('y2', pos.y)
-                .attr('stroke', '#ff9f43')
-                .attr('stroke-width', 2)
-                .attr('stroke-dasharray', '5,3');
-            })
-            .on('drag', function(event) {
-              const line = gMain.select('#dragLine');
-              if (!line.empty()) line.attr('x2', event.x).attr('y2', event.y);
-            })
-            .on('end', function(event) {
-              const line = gMain.select('#dragLine');
-              if (!line.empty()) line.remove();
-              const targetEl = document.elementFromPoint(event.sourceEvent.clientX, event.sourceEvent.clientY);
-              const targetPort = targetEl?.closest('.port');
-              if (targetPort && window.dragSource) {
-                const targetId = targetPort.getAttribute('data-person-id');
-                if (targetId !== window.dragSource) {
-                  showRelationDialog(window.dragSource, targetId);
-                }
+        // Drag с правильными координатами
+        const dragHandler = d3.drag()
+          .on('start', function(event) {
+            const sourceId = d3.select(this).attr('data-person-id');
+            window.dragSource = sourceId;
+            const srcPos = nodePositions[sourceId];
+            const isUp = d3.select(this).attr('cy') === '0';
+            const startY = isUp ? portUpY : portDownY;
+            gMain.append('line')
+              .attr('id', 'dragLine')
+              .attr('x1', srcPos.x).attr('y1', startY)
+              .attr('x2', srcPos.x).attr('y2', startY)
+              .attr('stroke', '#ff9f43').attr('stroke-width', 2)
+              .attr('stroke-dasharray', '5,3');
+          })
+          .on('drag', function(event) {
+            const line = gMain.select('#dragLine');
+            if (!line.empty()) {
+              const coords = d3.pointer(event, gMain.node());
+              line.attr('x2', coords[0]).attr('y2', coords[1]);
+            }
+          })
+          .on('end', function(event) {
+            const line = gMain.select('#dragLine');
+            if (!line.empty()) line.remove();
+            const coords = d3.pointer(event, gMain.node());
+            const targetEl = document.elementFromPoint(event.sourceEvent.clientX, event.sourceEvent.clientY);
+            const targetPort = targetEl?.closest('.port');
+            if (targetPort && window.dragSource) {
+              const targetId = targetPort.getAttribute('data-person-id');
+              if (targetId !== window.dragSource) {
+                showRelationDialog(window.dragSource, targetId);
               }
-              window.dragSource = null;
-            })
-          );
-        });
+            }
+            window.dragSource = null;
+          });
+
+        portUp.call(dragHandler);
+        portDown.call(dragHandler);
       });
 
-      // Центрируем вид
+      // Центрирование
       const allX = treeData.persons.map(p => nodePositions[p.id]?.x || 0);
       const allY = treeData.persons.map(p => nodePositions[p.id]?.y || 0);
-      const minX = Math.min(...allX);
-      const maxX = Math.max(...allX);
-      const minY = Math.min(...allY);
-      const maxY = Math.max(...allY);
-      const graphWidth = maxX - minX + 200;
-      const graphHeight = maxY - minY + 200;
+      const minX = Math.min(...allX), maxX = Math.max(...allX), minY = Math.min(...allY), maxY = Math.max(...allY);
+      const graphWidth = maxX - minX + 200, graphHeight = maxY - minY + 200;
       const scale = Math.min(width / graphWidth, height / graphHeight, 1.2);
-      const centerX = (minX + maxX) / 2;
-      const centerY = (minY + maxY) / 2;
-      const transform = d3.zoomIdentity.translate(width/2, height/2).scale(scale).translate(-centerX, -centerY);
-      svg.call(zoomBehavior.transform, transform);
+      const centerX = (minX + maxX) / 2, centerY = (minY + maxY) / 2;
+      svg.call(zoomBehavior.transform, d3.zoomIdentity.translate(width/2, height/2).scale(scale).translate(-centerX, -centerY));
     }
 
-    // ---------- РЕДАКТИРОВАНИЕ ----------
+    // ---------- ПРОФИЛЬ ----------
+    function openDetailModal(personId) {
+      const person = treeData.persons.find(p => p.id === personId);
+      if (!person) return;
+      currentDetailId = personId;
+      document.getElementById('detailPhoto').innerHTML = person.photo ? `<img src="${person.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : '<i class="fas fa-user"></i>';
+      document.getElementById('detailName').textContent = `${person.firstName || ''} ${person.lastName || ''} ${person.patronymic || ''}`.trim();
+      document.getElementById('detailRole').textContent = person.role || '';
+      document.getElementById('detailBirth').textContent = person.birthDate || '—';
+      document.getElementById('detailDeath').textContent = person.deathDate || '—';
+      document.getElementById('detailNotes').textContent = person.notes || '—';
+      detailModal.classList.add('active');
+    }
+
+    function closeDetailModal() {
+      detailModal.classList.remove('active');
+      currentDetailId = null;
+    }
+
+    // ---------- РЕДАКТОР ----------
     function openEditModal(personId = null) {
       if (personId) {
         const person = treeData.persons.find(p => p.id === personId);
@@ -642,6 +694,8 @@
         personIdInput.value = person.id;
         firstNameInput.value = person.firstName || '';
         lastNameInput.value = person.lastName || '';
+        patronymicInput.value = person.patronymic || '';
+        roleInput.value = person.role || '';
         birthDateInput.value = person.birthDate || '';
         deathDateInput.value = person.deathDate || '';
         genderInput.value = person.gender || 'male';
@@ -653,6 +707,8 @@
         personIdInput.value = '';
         firstNameInput.value = '';
         lastNameInput.value = '';
+        patronymicInput.value = '';
+        roleInput.value = '';
         birthDateInput.value = '';
         deathDateInput.value = '';
         genderInput.value = 'male';
@@ -680,13 +736,14 @@
       const data = {
         firstName: firstNameInput.value.trim(),
         lastName: lastNameInput.value.trim(),
+        patronymic: patronymicInput.value.trim(),
+        role: roleInput.value.trim(),
         birthDate: birthDateInput.value,
         deathDate: deathDateInput.value,
         gender: genderInput.value,
         notes: notesInput.value.trim(),
         photo: photoPreview.querySelector('img')?.src || ''
       };
-
       if (id) {
         const idx = treeData.persons.findIndex(p => p.id === id);
         if (idx !== -1) treeData.persons[idx] = { ...treeData.persons[idx], ...data };
@@ -694,8 +751,7 @@
         const newId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
         treeData.persons.push({ id: newId, ...data });
       }
-
-      calculateNodePositions(); // пересчитываем позиции
+      calculateNodePositions();
       closeEditModal();
       renderAll();
       saveToStorage();
@@ -718,8 +774,7 @@
       const source = treeData.persons.find(p => p.id === sourceId);
       const target = treeData.persons.find(p => p.id === targetId);
       if (!source || !target) return;
-      document.getElementById('relationTitle').textContent =
-        `Связь: ${source.firstName || '?'} ${source.lastName || ''} ↔ ${target.firstName || '?'} ${target.lastName || ''}`;
+      document.getElementById('relationTitle').textContent = `Связь: ${source.firstName || '?'} ${source.lastName || ''} ↔ ${target.firstName || '?'} ${target.lastName || ''}`;
       const buttonsDiv = document.getElementById('relationButtons');
       buttonsDiv.innerHTML = '';
       const options = [
@@ -735,9 +790,7 @@
           if (opt.type === 'parent') {
             if (opt.dir === 1) addRelation(sourceId, targetId, 'parent');
             else addRelation(targetId, sourceId, 'parent');
-          } else {
-            addRelation(sourceId, targetId, 'spouse');
-          }
+          } else addRelation(sourceId, targetId, 'spouse');
           closeRelationModal();
         };
         buttonsDiv.appendChild(btn);
@@ -745,9 +798,7 @@
       relationModal.classList.add('active');
     }
 
-    function closeRelationModal() {
-      relationModal.classList.remove('active');
-    }
+    function closeRelationModal() { relationModal.classList.remove('active'); }
 
     function addRelation(person1, person2, type) {
       if (person1 === person2) return;
@@ -761,7 +812,7 @@
       renderAll();
     }
 
-    // ---------- ОБРАБОТЧИКИ КНОПОК ----------
+    // ---------- ОБРАБОТЧИКИ ----------
     document.getElementById('savePersonBtn').addEventListener('click', savePerson);
     document.getElementById('deletePersonBtn').addEventListener('click', deletePerson);
     document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
@@ -769,6 +820,13 @@
     editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
     document.getElementById('cancelRelationBtn').addEventListener('click', closeRelationModal);
     relationModal.addEventListener('click', (e) => { if (e.target === relationModal) closeRelationModal(); });
+    document.getElementById('closeDetailBtn').addEventListener('click', closeDetailModal);
+    document.getElementById('closeDetailBtn2').addEventListener('click', closeDetailModal);
+    detailModal.addEventListener('click', (e) => { if (e.target === detailModal) closeDetailModal(); });
+    document.getElementById('editFromDetailBtn').addEventListener('click', () => {
+      closeDetailModal();
+      if (currentDetailId) openEditModal(currentDetailId);
+    });
 
     document.getElementById('addPersonBtn').addEventListener('click', () => openEditModal(null));
     document.getElementById('focusRootBtn').addEventListener('click', () => {
@@ -780,7 +838,7 @@
       if (!q) { renderAll(); return; }
       const found = treeData.persons.find(p => `${p.firstName} ${p.lastName}`.toLowerCase().includes(q));
       if (found) {
-        // Подсвечиваем? Пока просто перерисовываем с центровкой
+        // Можно было бы центрироваться на нём, но пока просто перерендерим
         renderAll();
       }
     });
