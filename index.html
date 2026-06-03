@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Семейное древо — Glass Roots</title>
+  <title>Family Roots – Семейное древо</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -31,24 +31,33 @@
       overflow: hidden;
       position: relative;
     }
+    /* ----- Шапка (два ряда) ----- */
     .glass-header {
       background: rgba(255, 255, 255, 0.4);
       backdrop-filter: blur(10px);
-      padding: 12px 24px;
+      padding: 12px 24px 8px;
+      display: flex;
+      flex-direction: column;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+      flex-shrink: 0;
+      gap: 8px;
+    }
+    .header-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-      flex-shrink: 0;
       flex-wrap: wrap;
       gap: 8px;
     }
-    .glass-header h1 {
+    .header-top h1 {
       font-weight: 300;
       font-size: 1.8rem;
       color: #2c3e50;
       letter-spacing: 1px;
       white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .header-actions {
       display: flex;
@@ -56,6 +65,14 @@
       align-items: center;
       flex-wrap: wrap;
     }
+    .header-tools {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      padding-bottom: 4px;
+    }
+    /* ----- Кнопки в стиле жидкого стекла ----- */
     .glass-btn {
       background: rgba(255, 255, 255, 0.5);
       backdrop-filter: blur(10px);
@@ -66,7 +83,7 @@
       font-size: 0.9rem;
       cursor: pointer;
       transition: all 0.3s ease;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 6px;
       font-weight: 500;
@@ -84,6 +101,11 @@
       color: white;
       font-weight: 600;
     }
+    .glass-btn.primary.disabled {
+      background: rgba(100, 149, 237, 0.3);
+      pointer-events: none;
+      color: rgba(255,255,255,0.7);
+    }
     .search-box {
       background: rgba(255, 255, 255, 0.4);
       backdrop-filter: blur(10px);
@@ -96,15 +118,25 @@
       outline: none;
     }
     .search-box::placeholder { color: #7f8c8d; }
+    /* ----- Область дерева с точками ----- */
     .tree-area {
       flex: 1;
       position: relative;
       overflow: hidden;
-      background: rgba(255, 255, 255, 0.1);
+      background-color: rgba(255, 255, 255, 0.1);
       cursor: grab;
     }
     .tree-area:active { cursor: grabbing; }
     .tree-area svg { width: 100%; height: 100%; }
+    /* Паттерн точек будет в SVG, фон зададим прозрачным */
+    .tree-area .dots-bg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    /* ----- Панель редактирования (выезжающая) ----- */
     .edit-panel {
       position: absolute;
       top: 20px;
@@ -141,6 +173,7 @@
     .edit-panel textarea { min-height: 60px; }
     .edit-panel .row { display: flex; gap: 10px; }
     .edit-panel .row > * { flex: 1; }
+    /* ----- Оверлей пароля ----- */
     .password-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -172,28 +205,53 @@
       font-size: 1rem;
       outline: none;
     }
+    .password-dialog input:last-of-type { margin-bottom: 20px; }
     .node-card { cursor: pointer; transition: all 0.2s; }
     .node-card:hover { filter: brightness(1.05); transform: scale(1.02); }
+    /* Сообщение о пустом древе */
+    .empty-tree-message {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.2rem;
+      color: rgba(44, 62, 80, 0.5);
+      pointer-events: none;
+      text-align: center;
+    }
     @media (max-width: 700px) {
       .edit-panel { width: 280px; }
-      .glass-header h1 { font-size: 1.2rem; }
+      .header-top h1 { font-size: 1.2rem; }
       .search-box { width: 120px; }
     }
   </style>
 </head>
 <body>
 <div class="app-container" id="app">
+  <!-- Шапка с двумя рядами -->
   <header class="glass-header">
-    <h1><i class="fas fa-tree" style="margin-right:8px;"></i>Glass Roots</h1>
-    <div class="header-actions">
-      <input type="text" class="search-box" placeholder="Поиск..." id="searchInput">
-      <button class="glass-btn" id="focusRootBtn" title="Показать всё древо"><i class="fas fa-home"></i></button>
-      <button class="glass-btn" id="exportBtn" title="Скачать зашифрованное древо"><i class="fas fa-download"></i></button>
-      <button class="glass-btn" id="importBtn" title="Загрузить древо из файла"><i class="fas fa-upload"></i></button>
-      <button class="glass-btn" id="lockBtn" title="Заблокировать доступ"><i class="fas fa-lock"></i></button>
+    <div class="header-top">
+      <h1><i class="fas fa-tree"></i> Family Roots</h1>
+      <div class="header-actions">
+        <input type="text" class="search-box" placeholder="Поиск..." id="searchInput">
+        <button class="glass-btn" id="focusRootBtn" title="Показать всё древо"><i class="fas fa-home"></i></button>
+        <button class="glass-btn" id="exportBtn" title="Скачать зашифрованное древо"><i class="fas fa-download"></i></button>
+        <button class="glass-btn" id="importBtn" title="Загрузить древо из файла"><i class="fas fa-upload"></i></button>
+        <button class="glass-btn" id="lockBtn" title="Заблокировать доступ"><i class="fas fa-lock"></i></button>
+      </div>
+    </div>
+    <div class="header-tools">
+      <button class="glass-btn primary" id="addPersonBtn"><i class="fas fa-plus"></i> Добавить человека</button>
+      <!-- Заготовки под будущие инструменты -->
+      <button class="glass-btn" id="undoBtn" title="Отменить"><i class="fas fa-undo"></i></button>
+      <button class="glass-btn" id="redoBtn" title="Повторить"><i class="fas fa-redo"></i></button>
+      <span style="flex:1;"></span>
     </div>
   </header>
-  <div class="tree-area" id="treeContainer"></div>
+
+  <!-- Область дерева -->
+  <div class="tree-area" id="treeContainer">
+    <!-- Сообщение о пустом древе будет добавляться динамически -->
+  </div>
 
   <!-- Панель редактирования -->
   <div class="edit-panel" id="editPanel">
@@ -232,11 +290,13 @@
     <button class="glass-btn primary" id="addRelationBtn" style="margin-top:8px; width:100%;">Связать</button>
   </div>
 
+  <!-- Оверлей пароля -->
   <div class="password-overlay" id="passwordOverlay">
     <div class="password-dialog">
       <h2 id="passTitle">Введите пароль</h2>
+      <input type="text" id="loginInput" placeholder="Логин" autocomplete="username">
       <input type="password" id="passwordInput" placeholder="Пароль">
-      <button class="glass-btn primary" id="passwordSubmit" style="width:100%;">Продолжить</button>
+      <button class="glass-btn primary disabled" id="passwordSubmit" style="width:100%;">Продолжить</button>
       <p style="margin-top:12px; font-size:0.8rem; color:#7f8c8d;">
         <a href="#" id="createNewLink">Создать новое древо</a>
       </p>
@@ -246,17 +306,19 @@
 
 <script>
   (function() {
-    // ---------- Константы ----------
+    // ---------- Глобальные переменные ----------
     const STORAGE_KEY = 'encryptedFamilyTree';
     let treeData = { persons: [], relationships: [] };
     let encryptionKey = false;
     let passwordSet = false;
+    let currentLogin = '';       // храним логин текущей сессии
     let focusPersonId = null;
 
     // DOM элементы
     const treeContainer = document.getElementById('treeContainer');
     const editPanel = document.getElementById('editPanel');
     const passwordOverlay = document.getElementById('passwordOverlay');
+    const loginInput = document.getElementById('loginInput');
     const passwordInput = document.getElementById('passwordInput');
     const passwordSubmit = document.getElementById('passwordSubmit');
     const passTitle = document.getElementById('passTitle');
@@ -274,14 +336,25 @@
     const relTypeSelect = document.getElementById('relType');
     const relTargetSelect = document.getElementById('relTarget');
 
-    let svgSelection = null, gMain = null;
-    let zoomBehavior = null;   // <-- сохраняем zoom-объект
+    let svgSelection = null, gMain = null, zoomBehavior = null;
 
-    // ---------- Шифрование ----------
-    async function deriveKey(password, salt) {
+    // ---------- Управление состоянием кнопки Продолжить ----------
+    function updateSubmitButtonState() {
+      if (passwordInput.value.trim() === '') {
+        passwordSubmit.classList.add('disabled');
+      } else {
+        passwordSubmit.classList.remove('disabled');
+      }
+    }
+    passwordInput.addEventListener('input', updateSubmitButtonState);
+    loginInput.addEventListener('input', updateSubmitButtonState); // не обязательно, но оставим
+
+    // ---------- Шифрование с привязкой к логину ----------
+    async function deriveKey(login, password, salt = null) {
       if (!salt) salt = crypto.getRandomValues(new Uint8Array(16));
+      const combined = login + ':' + password;  // логин добавляет уникальность
       const keyMaterial = await crypto.subtle.importKey(
-        'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']
+        'raw', new TextEncoder().encode(combined), 'PBKDF2', false, ['deriveKey']
       );
       const key = await crypto.subtle.deriveKey(
         { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
@@ -290,70 +363,81 @@
       return { key, salt };
     }
 
-    async function encryptData(data, password) {
-      const { key, salt } = await deriveKey(password);
+    async function encryptData(data, login, password) {
+      const { key, salt } = await deriveKey(login, password);
       const iv = crypto.getRandomValues(new Uint8Array(12));
       const encoded = new TextEncoder().encode(JSON.stringify(data));
       const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded);
-      return JSON.stringify({
-        salt: Array.from(salt),
-        iv: Array.from(iv),
-        data: Array.from(new Uint8Array(encrypted))
-      });
+      return {
+        login,   // сохраняем логин открыто для проверки при входе
+        payload: JSON.stringify({
+          salt: Array.from(salt),
+          iv: Array.from(iv),
+          data: Array.from(new Uint8Array(encrypted))
+        })
+      };
     }
 
-    async function decryptData(encryptedPayload, password) {
-      const payload = JSON.parse(encryptedPayload);
-      const salt = new Uint8Array(payload.salt);
-      const iv = new Uint8Array(payload.iv);
-      const encrypted = new Uint8Array(payload.data);
-      const { key } = await deriveKey(password, salt);
-      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encrypted);
+    async function decryptData(stored, login, password) {
+      if (stored.login !== login) throw new Error('Неверный логин');
+      const { salt, iv, data } = JSON.parse(stored.payload);
+      const { key } = await deriveKey(login, password, new Uint8Array(salt));
+      const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: new Uint8Array(iv) }, key, new Uint8Array(data)
+      );
       return JSON.parse(new TextDecoder().decode(decrypted));
     }
 
     async function saveToStorage() {
-      if (!encryptionKey) return;
-      const encrypted = await encryptData(treeData, passwordInput.value);
-      localStorage.setItem(STORAGE_KEY, encrypted);
+      if (!encryptionKey || !currentLogin) return;
+      const encrypted = await encryptData(treeData, currentLogin, passwordInput.value);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(encrypted));
     }
 
-    async function loadFromStorage(password) {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) throw new Error('Нет сохранённых данных');
-      return await decryptData(stored, password);
+    async function loadFromStorage(login, password) {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) throw new Error('Нет сохранённых данных');
+      const stored = JSON.parse(raw);
+      return await decryptData(stored, login, password);
     }
 
-    // ---------- Пароль ----------
+    // ---------- Инициализация и проверка пароля ----------
     async function checkStorageAndPrompt() {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        passwordOverlay.style.display = 'flex';
-        passTitle.textContent = 'Введите пароль для доступа к древу';
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          const stored = JSON.parse(raw);
+          // Предзаполняем логин, если был сохранён
+          loginInput.value = stored.login || '';
+        } catch (e) { /* ignore */ }
+        passTitle.textContent = 'Вход в семейное древо';
         createNewLink.style.display = 'inline';
       } else {
-        passwordOverlay.style.display = 'flex';
-        passTitle.textContent = 'Придумайте пароль для нового древа';
+        passTitle.textContent = 'Создайте новое древо';
         createNewLink.style.display = 'none';
       }
       passwordInput.value = '';
-      passwordInput.focus();
+      updateSubmitButtonState();
+      passwordOverlay.style.display = 'flex';
+      loginInput.focus();
     }
 
     async function handlePasswordSubmit() {
+      const login = loginInput.value.trim();
       const pass = passwordInput.value.trim();
-      if (!pass) return alert('Пароль не может быть пустым');
-      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!login || !pass) return alert('Введите логин и пароль');
+      const raw = localStorage.getItem(STORAGE_KEY);
       try {
-        if (stored) {
-          treeData = await loadFromStorage(pass);
+        if (raw) {
+          const stored = JSON.parse(raw);
+          treeData = await decryptData(stored, login, pass);
         } else {
           treeData = { persons: [], relationships: [] };
         }
+        currentLogin = login;
         passwordSet = true;
         encryptionKey = true;
         passwordOverlay.style.display = 'none';
-        // Небольшая задержка, чтобы контейнер перерисовался и получил размеры
         setTimeout(() => renderAll(), 50);
       } catch (e) {
         alert(e.message);
@@ -363,17 +447,27 @@
     function lockApp() {
       passwordSet = false;
       encryptionKey = false;
+      currentLogin = '';
       treeData = { persons: [], relationships: [] };
       passwordOverlay.style.display = 'flex';
-      passTitle.textContent = 'Введите пароль для доступа к древу';
+      passTitle.textContent = 'Вход в семейное древо';
       createNewLink.style.display = 'inline';
+      loginInput.value = '';
+      passwordInput.value = '';
+      updateSubmitButtonState();
       editPanel.classList.remove('active');
     }
 
-    // ---------- Визуализация ----------
+    // ---------- Визуализация с точечным фоном ----------
     function renderAll() {
       if (!passwordSet) return;
       treeContainer.innerHTML = '';
+
+      // Если дерево пустое, показываем сообщение
+      if (treeData.persons.length === 0) {
+        treeContainer.innerHTML = '<div class="empty-tree-message">Нажмите «+» чтобы добавить первого человека</div>';
+        return;
+      }
 
       // Строим граф
       const g = new dagre.graphlib.Graph({ directed: true });
@@ -382,9 +476,7 @@
       treeData.persons.forEach(p => {
         g.setNode(p.id, {
           label: `${p.firstName || '?'} ${p.lastName || ''}`.trim(),
-          person: p,
-          width: 140,
-          height: 60
+          person: p, width: 140, height: 60
         });
       });
 
@@ -397,7 +489,6 @@
         }
       });
 
-      // Фокусное подмножество
       let nodesToShow = treeData.persons.map(p => p.id);
       if (focusPersonId) {
         const ancestors = getAncestors(focusPersonId);
@@ -416,7 +507,6 @@
 
       dagre.layout(subGraph, { rankdir: 'TB', nodesep: 40, ranksep: 60, marginx: 30, marginy: 30 });
 
-      // SVG
       const width = treeContainer.clientWidth || 800;
       const height = treeContainer.clientHeight || 600;
 
@@ -424,7 +514,26 @@
         .attr('width', width)
         .attr('height', height);
 
-      // Zoom behavior создаём один раз
+      // ----- Точечный фон через паттерн -----
+      const defs = svgSelection.append('defs');
+      defs.append('pattern')
+        .attr('id', 'dotPattern')
+        .attr('patternUnits', 'userSpaceOnUse')
+        .attr('width', 20)
+        .attr('height', 20)
+        .append('circle')
+        .attr('cx', 10)
+        .attr('cy', 10)
+        .attr('r', 1.2)
+        .attr('fill', 'rgba(44, 62, 80, 0.2)');
+      
+      // Фон с точками (за gMain)
+      svgSelection.append('rect')
+        .attr('width', '100%')
+        .attr('height', '100%')
+        .attr('fill', 'url(#dotPattern)');
+
+      // Zoom behavior
       zoomBehavior = d3.zoom()
         .scaleExtent([0.3, 3])
         .on('zoom', (event) => {
@@ -432,7 +541,6 @@
         });
 
       svgSelection.call(zoomBehavior);
-
       svgSelection.on('click', (event) => {
         if (event.target === svgSelection.node()) closeEditPanel();
       });
@@ -454,8 +562,8 @@
         }
       });
 
-      // Маркер для стрелок
-      svgSelection.append('defs').append('marker')
+      // Маркер стрелки
+      defs.append('marker')
         .attr('id', 'arrowhead')
         .attr('viewBox', '0 0 10 10')
         .attr('refX', 10).attr('refY', 5)
@@ -495,17 +603,12 @@
         }
 
         group.append('text')
-          .attr('x', person.photo ? 40 : 12)
-          .attr('y', 24)
-          .attr('fill', '#2c3e50')
-          .attr('font-size', '12px')
-          .attr('font-weight', '500')
-          .text(person.firstName || '???');
+          .attr('x', person.photo ? 40 : 12).attr('y', 24)
+          .attr('fill', '#2c3e50').attr('font-size', '12px')
+          .attr('font-weight', '500').text(person.firstName || '???');
         group.append('text')
-          .attr('x', person.photo ? 40 : 12)
-          .attr('y', 42)
-          .attr('fill', '#7f8c8d')
-          .attr('font-size', '10px')
+          .attr('x', person.photo ? 40 : 12).attr('y', 42)
+          .attr('fill', '#7f8c8d').attr('font-size', '10px')
           .text(person.lastName || '');
       });
 
@@ -532,49 +635,40 @@
           .scale(scale)
           .translate(-centerX, -centerY);
 
-        // Правильный вызов transform через сохранённый zoomBehavior
         svgSelection.call(zoomBehavior.transform, initialTransform);
       }
     }
 
-    // Обход родственников
+    // ---------- Вспомогательные функции обхода ----------
     function getAncestors(personId) {
       const ancestors = new Set();
       const stack = [personId];
       while (stack.length) {
         const curr = stack.pop();
         treeData.relationships.filter(r => r.type === 'parent' && r.person2 === curr).forEach(r => {
-          if (!ancestors.has(r.person1)) {
-            ancestors.add(r.person1);
-            stack.push(r.person1);
-          }
+          if (!ancestors.has(r.person1)) { ancestors.add(r.person1); stack.push(r.person1); }
         });
       }
       return Array.from(ancestors);
     }
-
     function getDescendants(personId) {
       const descendants = new Set();
       const stack = [personId];
       while (stack.length) {
         const curr = stack.pop();
         treeData.relationships.filter(r => r.type === 'parent' && r.person1 === curr).forEach(r => {
-          if (!descendants.has(r.person2)) {
-            descendants.add(r.person2);
-            stack.push(r.person2);
-          }
+          if (!descendants.has(r.person2)) { descendants.add(r.person2); stack.push(r.person2); }
         });
       }
       return Array.from(descendants);
     }
-
     function getSpouses(personId) {
       return treeData.relationships
         .filter(r => r.type === 'spouse' && (r.person1 === personId || r.person2 === personId))
         .map(r => r.person1 === personId ? r.person2 : r.person1);
     }
 
-    // Панель редактирования
+    // ---------- Панель редактирования ----------
     function openEditPanel(personId = null) {
       editPanel.classList.add('active');
       if (personId) {
@@ -605,9 +699,7 @@
       populateRelationTargets(personId);
     }
 
-    function closeEditPanel() {
-      editPanel.classList.remove('active');
-    }
+    function closeEditPanel() { editPanel.classList.remove('active'); }
 
     function populateRelationTargets(excludeId) {
       relTargetSelect.innerHTML = '';
@@ -625,9 +717,7 @@
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = (ev) => {
-          photoPreview.innerHTML = `<img src="${ev.target.result}" style="max-width:80px; border-radius:50%;">`;
-        };
+        reader.onload = (ev) => { photoPreview.innerHTML = `<img src="${ev.target.result}" style="max-width:80px; border-radius:50%;">`; };
         reader.readAsDataURL(file);
       }
     });
@@ -643,7 +733,6 @@
         notes: notesInput.value.trim(),
         photo: photoPreview.querySelector('img')?.src || ''
       };
-
       if (id) {
         const index = treeData.persons.findIndex(p => p.id === id);
         if (index !== -1) treeData.persons[index] = { ...treeData.persons[index], ...personData };
@@ -676,8 +765,7 @@
       if (sourceId === targetId) return alert('Нельзя связать с самим собой');
       const exists = treeData.relationships.some(r =>
         (r.type === type && r.person1 === sourceId && r.person2 === targetId) ||
-        (type === 'spouse' && r.type === 'spouse' &&
-          ((r.person1 === sourceId && r.person2 === targetId) || (r.person1 === targetId && r.person2 === sourceId)))
+        (type === 'spouse' && r.type === 'spouse' && ((r.person1 === sourceId && r.person2 === targetId) || (r.person1 === targetId && r.person2 === sourceId)))
       );
       if (exists) return alert('Такая связь уже существует');
       treeData.relationships.push({ type, person1: sourceId, person2: targetId });
@@ -686,11 +774,14 @@
       renderAll();
     }
 
-    // Обработчики кнопок
+    // ---------- Обработчики кнопок и панели инструментов ----------
     document.getElementById('savePersonBtn').addEventListener('click', savePerson);
     document.getElementById('deletePersonBtn').addEventListener('click', deletePerson);
     document.getElementById('cancelEditBtn').addEventListener('click', closeEditPanel);
     document.getElementById('addRelationBtn').addEventListener('click', addRelation);
+
+    // Новая кнопка "+" в шапке
+    document.getElementById('addPersonBtn').addEventListener('click', () => openEditPanel(null));
 
     document.getElementById('focusRootBtn').addEventListener('click', () => {
       focusPersonId = null;
@@ -728,23 +819,30 @@
         const reader = new FileReader();
         reader.onload = (ev) => {
           localStorage.setItem(STORAGE_KEY, ev.target.result);
-          lockApp();
+          lockApp(); // попросит заново ввести логин/пароль
         };
         reader.readAsText(file);
       };
       input.click();
     });
 
+    // Undo/Redo пока заглушки
+    document.getElementById('undoBtn').addEventListener('click', () => alert('Функция отмены в разработке'));
+    document.getElementById('redoBtn').addEventListener('click', () => alert('Функция повтора в разработке'));
+
+    // Оверлей пароля
     passwordSubmit.addEventListener('click', handlePasswordSubmit);
-    passwordInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') handlePasswordSubmit();
-    });
+    passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handlePasswordSubmit(); });
+    loginInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') passwordInput.focus(); });
     createNewLink.addEventListener('click', (e) => {
       e.preventDefault();
       localStorage.removeItem(STORAGE_KEY);
-      passTitle.textContent = 'Придумайте пароль для нового древа';
+      passTitle.textContent = 'Создайте новое древо';
       createNewLink.style.display = 'none';
+      loginInput.value = '';
       passwordInput.value = '';
+      updateSubmitButtonState();
+      loginInput.focus();
     });
 
     // Старт
