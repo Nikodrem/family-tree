@@ -212,17 +212,15 @@
     }
     .relation-dialog h3 { margin-bottom: 12px; font-weight: 400; color: #2c3e50; }
     .relation-dialog button { margin: 6px; }
-    .node-card {
-      cursor: grab;
-      transition: filter 0.2s;
-    }
+    .node-card { cursor: grab; transition: filter 0.2s; }
     .node-card:active { cursor: grabbing; }
     .node-card:hover { filter: brightness(1.03); }
     .port {
       cursor: crosshair;
       fill: rgba(100, 149, 237, 0.7);
       stroke: white;
-      stroke-width: 2;
+      stroke-width: 1.5;
+      r: 6;
     }
     .port:hover { fill: rgba(100, 149, 237, 1); }
     .empty-tree-message {
@@ -373,11 +371,11 @@
 <script>
   (function() {
     const STORAGE_KEY = 'encryptedFamilyTree';
-    let treeData = { persons: [], relationships: [] };
+    // treeData теперь включает rootId и позиции
+    let treeData = { rootId: null, persons: [], relationships: [], positions: {} };
     let passwordSet = false;
     let currentLogin = '';
     let currentPassword = '';
-    let nodePositions = {};
     let currentDetailId = null;
 
     const treeContainer = document.getElementById('treeContainer');
@@ -409,7 +407,7 @@
     }
     passwordInput.addEventListener('input', updateSubmitButtonState);
 
-    // ---------- Шифрование ----------
+    // Шифрование
     async function deriveKey(login, password, salt = null) {
       if (!salt) salt = crypto.getRandomValues(new Uint8Array(16));
       const combined = login + ':' + password;
@@ -440,7 +438,7 @@
         .catch(e => console.error('Ошибка сохранения', e));
     }
 
-    // ---------- Вход ----------
+    // Вход
     async function checkStorageAndPrompt() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -464,12 +462,17 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       try {
         if (raw) treeData = await decryptData(JSON.parse(raw), login, pass);
-        else treeData = { persons: [], relationships: [] };
+        else {
+          treeData = { rootId: null, persons: [], relationships: [], positions: {} };
+        }
+        // миграция: убедимся, что positions и rootId есть
+        if (!treeData.positions) treeData.positions = {};
+        if (treeData.rootId === undefined) treeData.rootId = null;
         currentLogin = login;
         currentPassword = pass;
         passwordSet = true;
         passwordOverlay.style.display = 'none';
-        calculateNodePositions();
+        ensurePositions();
         renderAll();
       } catch (e) { alert(e.message); }
     }
@@ -478,8 +481,7 @@
       passwordSet = false;
       currentLogin = '';
       currentPassword = '';
-      treeData = { persons: [], relationships: [] };
-      nodePositions = {};
+      treeData = { rootId: null, persons: [], relationships: [], positions: {} };
       passwordOverlay.style.display = 'flex';
       passTitle.textContent = 'Вход в семейное древо';
       createNewLink.style.display = 'inline';
@@ -490,25 +492,86 @@
       closeDetailModal();
     }
 
-    function calculateNodePositions() {
-      nodePositions = {};
-      if (treeData.persons.length === 0) return;
-      const startX = 300, startY = 300, stepX = 200;
+    // Позиции
+    function ensurePositions() {
       treeData.persons.forEach((p, i) => {
-        nodePositions[p.id] = { x: startX + i * stepX, y: startY };
+        if (!treeData.positions[p.id]) {
+          treeData.positions[p.id] = { x: 300 + i * 200, y: 300 };
+        }
       });
     }
 
+    // Роли с учётом root
     function getDisplayRole(person) {
       if (person.role && person.role.trim()) return person.role.trim();
+      if (person.id === treeData.rootId) return 'Вы';
+      // если есть root, попробуем определить родство
+      const root = treeData.persons.find(p => p.id === treeData.rootId);
+      if (!root) {
+        // без root – старые роли
+        const roles = [];
+        const isParent = treeData.relationships.some(r => r.type === 'parent' && r.person1 === person.id);
+        const isChild = treeData.relationships.some(r => r.type === 'parent' && r.person2 === person.id);
+        const isSpouse = treeData.relationships.some(r => r.type === 'spouse' && (r.person1 === person.id || r.person2 === person.id));
+        const g = person.gender;
+        if (isParent) roles.push(g === 'female' ? 'Мать' : 'Отец');
+        if (isChild) roles.push(g === 'female' ? 'Дочь' : 'Сын');
+        if (isSpouse) roles.push(g === 'female' ? 'Жена' : 'Муж');
+        return roles.length ? roles.join(', ') : 'Член семьи';
+      }
+      // Ищем путь к root через цепочки parent
+      function findRelation(fromId, toId, depth = 0, visited = new Set()) {
+        if (fromId === toId) return { found: true, relation: '', depth };
+        if (visited.has(fromId)) return { found: false };
+        visited.add(fromId);
+        for (let rel of treeData.relationships) {
+          if (rel.type === 'parent' && rel.person2 === fromId) { // from родитель rel.person1
+            const result = findRelation(rel.person1, toId, depth + 1, visited);
+            if (result.found) {
+              const gender = treeData.persons.find(p => p.id === fromId)?.gender;
+              let term = '';
+              if (depth === 0) term = gender === 'female' ? 'мать' : 'отец';
+              else if (depth === 1) term = gender === 'female' ? 'бабушка' : 'дедушка';
+              else term = (gender === 'female' ? 'прабабушка' : 'прадедушка');
+              return { found: true, relation: term + (result.relation ? ' ' + result.relation : ''), depth };
+            }
+          }
+          if (rel.type === 'parent' && rel.person1 === fromId) { // from ребёнок rel.person2
+            const result = findRelation(rel.person2, toId, depth - 1, visited);
+            if (result.found) {
+              const gender = treeData.persons.find(p => p.id === fromId)?.gender;
+              let term = '';
+              if (depth === 1) term = gender === 'female' ? 'дочь' : 'сын';
+              else if (depth === 2) term = (gender === 'female' ? 'внучка' : 'внук');
+              else if (depth === 3) term = (gender === 'female' ? 'правнучка' : 'правнук');
+              return { found: true, relation: term + (result.relation ? ' ' + result.relation : ''), depth };
+            }
+          }
+          // Супруг: идём в обе стороны
+          if (rel.type === 'spouse') {
+            const other = rel.person1 === fromId ? rel.person2 : (rel.person2 === fromId ? rel.person1 : null);
+            if (other) {
+              const result = findRelation(other, toId, depth, visited);
+              if (result.found) {
+                const gender = treeData.persons.find(p => p.id === fromId)?.gender;
+                let term = gender === 'female' ? 'жена' : 'муж';
+                return { found: true, relation: term + (result.relation ? ' ' + result.relation : ''), depth };
+              }
+            }
+          }
+        }
+        return { found: false };
+      }
+      const result = findRelation(person.id, treeData.rootId);
+      if (result.found && result.relation) return result.relation;
+      // fallback
       const roles = [];
       const isParent = treeData.relationships.some(r => r.type === 'parent' && r.person1 === person.id);
       const isChild = treeData.relationships.some(r => r.type === 'parent' && r.person2 === person.id);
       const isSpouse = treeData.relationships.some(r => r.type === 'spouse' && (r.person1 === person.id || r.person2 === person.id));
-      const g = person.gender;
-      if (isParent) roles.push(g === 'female' ? 'Мать' : 'Отец');
-      if (isChild) roles.push(g === 'female' ? 'Дочь' : 'Сын');
-      if (isSpouse) roles.push(g === 'female' ? 'Жена' : 'Муж');
+      if (isParent) roles.push(person.gender === 'female' ? 'Мать' : 'Отец');
+      if (isChild) roles.push(person.gender === 'female' ? 'Дочь' : 'Сын');
+      if (isSpouse) roles.push(person.gender === 'female' ? 'Жена' : 'Муж');
       return roles.length ? roles.join(', ') : 'Член семьи';
     }
 
@@ -516,7 +579,7 @@
       if (!passwordSet) return;
       treeContainer.innerHTML = '';
       if (treeData.persons.length === 0) {
-        treeContainer.innerHTML = '<div class="empty-tree-message">Нажмите «+» чтобы добавить первого человека</div>';
+        treeContainer.innerHTML = `<div class="empty-tree-message">Нажмите «+» чтобы добавить первого человека</div>`;
         return;
       }
 
@@ -560,8 +623,8 @@
       const drawEdges = () => {
         edgesLayer.selectAll('*').remove();
         treeData.relationships.forEach(rel => {
-          const sourcePos = nodePositions[rel.person1];
-          const targetPos = nodePositions[rel.person2];
+          const sourcePos = treeData.positions[rel.person1];
+          const targetPos = treeData.positions[rel.person2];
           if (sourcePos && targetPos) {
             edgesLayer.append('line')
               .attr('x1', sourcePos.x).attr('y1', sourcePos.y)
@@ -578,7 +641,7 @@
       // Узлы
       const nodesLayer = gMain.append('g');
       treeData.persons.forEach(person => {
-        const pos = nodePositions[person.id];
+        const pos = treeData.positions[person.id];
         if (!pos) return;
         const cardWidth = 140, cardHeight = 60;
         const card = nodesLayer.append('g')
@@ -588,7 +651,7 @@
         card.append('rect')
           .attr('width', cardWidth).attr('height', cardHeight)
           .attr('rx', 14)
-          .attr('fill', '#ffffff') // сплошной белый
+          .attr('fill', '#ffffff')
           .attr('stroke', 'rgba(0,0,0,0.1)')
           .attr('stroke-width', 1);
 
@@ -604,30 +667,39 @@
           .attr('x', person.photo ? 40 : 12).attr('y', 24)
           .attr('fill', '#2c3e50').attr('font-size', '12px').attr('font-weight', '600')
           .text(`${person.firstName || '?'} ${person.lastName || ''}`.trim());
+        const roleText = getDisplayRole(person);
         card.append('text')
           .attr('x', person.photo ? 40 : 12).attr('y', 42)
           .attr('fill', '#7f8c8d').attr('font-size', '10px')
-          .text(getDisplayRole(person));
+          .text(roleText);
 
-        // Порты (связи)
+        // Порты (маленькие круги) – верхний и нижний центр
+        const portUpCenter = { x: cardWidth/2, y: 0 };
+        const portDownCenter = { x: cardWidth/2, y: cardHeight };
         const portUp = card.append('circle')
-          .attr('cx', cardWidth/2).attr('cy', 0).attr('r', 8).attr('class', 'port')
+          .attr('cx', portUpCenter.x).attr('cy', portUpCenter.y).attr('class', 'port')
           .attr('data-person-id', person.id);
         const portDown = card.append('circle')
-          .attr('cx', cardWidth/2).attr('cy', cardHeight).attr('r', 8).attr('class', 'port')
+          .attr('cx', portDownCenter.x).attr('cy', portDownCenter.y).attr('class', 'port')
           .attr('data-person-id', person.id);
+
+        // Для линий нам нужны абсолютные координаты портов
+        const getPortAbs = (portCy) => {
+          if (portCy === 0) return { x: pos.x, y: pos.y - cardHeight/2 };
+          else return { x: pos.x, y: pos.y + cardHeight/2 };
+        };
 
         const portDrag = d3.drag()
           .on('start', function(event) {
-            event.sourceEvent.stopPropagation(); // не даём начать перетаскивание карточки
+            event.sourceEvent.stopPropagation();
             svg.on('.zoom', null);
             window.dragSource = person.id;
             const portCy = +d3.select(this).attr('cy');
-            const yStart = (portCy === 0) ? pos.y - cardHeight/2 : pos.y + cardHeight/2;
+            const abs = getPortAbs(portCy);
             gMain.append('line')
               .attr('id', 'dragLine')
-              .attr('x1', pos.x).attr('y1', yStart)
-              .attr('x2', pos.x).attr('y2', yStart)
+              .attr('x1', abs.x).attr('y1', abs.y)
+              .attr('x2', abs.x).attr('y2', abs.y)
               .attr('stroke', '#ff9f43').attr('stroke-width', 2)
               .attr('stroke-dasharray', '5,3');
           })
@@ -656,18 +728,11 @@
         portUp.call(portDrag);
         portDown.call(portDrag);
 
-        // Перетаскивание самой карточки
+        // Перетаскивание карточки
         const cardDrag = d3.drag()
           .on('start', function(event) {
-            // не реагируем, если начали с порта (остановлено stopPropagation)
             svg.on('.zoom', null);
-            // сохраняем начальную позицию
-            window.draggedCard = {
-              personId: person.id,
-              startX: pos.x,
-              startY: pos.y,
-              moved: false
-            };
+            window.draggedCard = { personId: person.id, startPos: { ...pos }, moved: false };
           })
           .on('drag', function(event) {
             window.draggedCard.moved = true;
@@ -681,14 +746,14 @@
             const dragged = window.draggedCard;
             if (!dragged) return;
             if (dragged.moved) {
-              // обновляем позицию в nodePositions
-              const newX = dragged.startX + (event.x - dragged.startX);
-              const newY = dragged.startY + (event.y - dragged.startY);
-              nodePositions[dragged.personId].x = newX;
-              nodePositions[dragged.personId].y = newY;
+              const newPos = {
+                x: dragged.startPos.x + (event.x - dragged.startPos.x),
+                y: dragged.startPos.y + (event.y - dragged.startPos.y)
+              };
+              treeData.positions[dragged.personId] = newPos;
               drawEdges();
+              saveToStorage();
             } else {
-              // короткий клик – открываем профиль
               openDetailModal(dragged.personId);
             }
             window.draggedCard = null;
@@ -698,8 +763,8 @@
       });
 
       // Центрирование
-      const allX = treeData.persons.map(p => nodePositions[p.id]?.x || 0);
-      const allY = treeData.persons.map(p => nodePositions[p.id]?.y || 0);
+      const allX = treeData.persons.map(p => treeData.positions[p.id]?.x || 0);
+      const allY = treeData.persons.map(p => treeData.positions[p.id]?.y || 0);
       const minX = Math.min(...allX), maxX = Math.max(...allX), minY = Math.min(...allY), maxY = Math.max(...allY);
       const graphWidth = maxX - minX + 200, graphHeight = maxY - minY + 200;
       const scale = Math.min(width / graphWidth, height / graphHeight, 1.2);
@@ -707,7 +772,7 @@
       svg.call(zoomBehavior.transform, d3.zoomIdentity.translate(width/2, height/2).scale(scale).translate(-centerX, -centerY));
     }
 
-    // ---------- Профиль и редактор ----------
+    // Профиль
     function openDetailModal(personId) {
       const person = treeData.persons.find(p => p.id === personId);
       if (!person) return;
@@ -726,6 +791,7 @@
       currentDetailId = null;
     }
 
+    // Редактор
     function openEditModal(personId = null) {
       if (personId) {
         const person = treeData.persons.find(p => p.id === personId);
@@ -808,8 +874,14 @@
       } else {
         const newId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
         treeData.persons.push({ id: newId, ...data });
+        treeData.positions[newId] = { x: 300 + treeData.persons.length * 180, y: 300 };
+        // Если это первый человек, предлагаем сделать его "Собой"
+        if (treeData.persons.length === 1 && !treeData.rootId) {
+          if (confirm('Сделать этого человека главным (Вами)? От этого зависят родственные обозначения.')) {
+            treeData.rootId = newId;
+          }
+        }
       }
-      calculateNodePositions();
       closeEditModal();
       renderAll();
       saveToStorage();
@@ -821,7 +893,8 @@
       if (!confirm('Удалить этого человека и все его связи?')) return;
       treeData.persons = treeData.persons.filter(p => p.id !== id);
       treeData.relationships = treeData.relationships.filter(r => r.person1 !== id && r.person2 !== id);
-      calculateNodePositions();
+      delete treeData.positions[id];
+      if (treeData.rootId === id) treeData.rootId = null;
       saveToStorage();
       closeEditModal();
       renderAll();
@@ -869,7 +942,7 @@
       renderAll();
     }
 
-    // ---------- Обработчики кнопок ----------
+    // Обработчики
     document.getElementById('savePersonBtn').addEventListener('click', savePerson);
     document.getElementById('deletePersonBtn').addEventListener('click', deletePerson);
     document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
@@ -887,14 +960,16 @@
 
     document.getElementById('addPersonBtn').addEventListener('click', () => openEditModal(null));
     document.getElementById('focusRootBtn').addEventListener('click', () => {
-      calculateNodePositions();
       renderAll();
     });
     searchInput.addEventListener('input', (e) => {
       const q = e.target.value.toLowerCase();
       if (!q) { renderAll(); return; }
       const found = treeData.persons.find(p => `${p.firstName} ${p.lastName}`.toLowerCase().includes(q));
-      if (found) renderAll();
+      if (found) {
+        // сброс центра не делаем, просто перерисовываем
+        renderAll();
+      }
     });
     document.getElementById('lockBtn').addEventListener('click', lockApp);
     document.getElementById('exportBtn').addEventListener('click', () => {
