@@ -117,7 +117,6 @@
     .tree-area:active { cursor: grabbing; }
     .tree-area svg { width: 100%; height: 100%; }
 
-    /* Модальное окно редактирования */
     .modal-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -175,7 +174,6 @@
       line-height: 1;
     }
 
-    /* Диалог связи */
     .relation-dialog {
       background: rgba(255, 255, 255, 0.9);
       backdrop-filter: blur(20px);
@@ -185,10 +183,7 @@
       box-shadow: 0 20px 40px rgba(0,0,0,0.2);
     }
     .relation-dialog h3 { margin-bottom: 12px; font-weight: 400; color: #2c3e50; }
-    .relation-dialog button {
-      margin: 6px;
-      padding: 10px 20px;
-    }
+    .relation-dialog button { margin: 6px; }
 
     .node-card { cursor: pointer; transition: all 0.2s; }
     .node-card:hover { filter: brightness(1.05); transform: scale(1.02); }
@@ -241,6 +236,7 @@
       outline: none;
     }
     .password-dialog input:last-of-type { margin-bottom: 20px; }
+
     @media (max-width: 700px) {
       .edit-panel { width: 95vw; }
       .header-top h1 { font-size: 1.2rem; }
@@ -250,7 +246,6 @@
 </head>
 <body>
 <div class="app-container" id="app">
-  <!-- Шапка -->
   <header class="glass-header">
     <div class="header-top">
       <h1><i class="fas fa-tree"></i> Family Roots</h1>
@@ -272,7 +267,6 @@
 
   <div class="tree-area" id="treeContainer"></div>
 
-  <!-- Модальное окно редактирования человека (без блока связей) -->
   <div class="modal-overlay" id="editModal">
     <div class="edit-panel">
       <button class="close-modal-btn" id="closeModalBtn">&times;</button>
@@ -305,7 +299,6 @@
     </div>
   </div>
 
-  <!-- Оверлей выбора связи (drag-and-drop) -->
   <div class="modal-overlay" id="relationModal">
     <div class="relation-dialog">
       <h3 id="relationTitle">Выберите тип связи</h3>
@@ -314,7 +307,6 @@
     </div>
   </div>
 
-  <!-- Оверлей входа -->
   <div class="password-overlay" id="passwordOverlay">
     <div class="password-dialog">
       <h2 id="passTitle">Введите пароль</h2>
@@ -330,15 +322,14 @@
 
 <script>
   (function() {
-    // ---------- Глобальные переменные ----------
     const STORAGE_KEY = 'encryptedFamilyTree';
     let treeData = { persons: [], relationships: [] };
     let encryptionKey = false;
     let passwordSet = false;
     let currentLogin = '';
+    let currentPassword = '';   // <-- храним пароль для шифрования
     let focusPersonId = null;
 
-    // DOM
     const treeContainer = document.getElementById('treeContainer');
     const editModal = document.getElementById('editModal');
     const relationModal = document.getElementById('relationModal');
@@ -360,15 +351,14 @@
     const notesInput = document.getElementById('notes');
 
     let svgSelection = null, gMain = null, zoomBehavior = null;
-    let dragSource = null, dragTarget = null; // для drag-and-drop связи
+    let dragSource = null, dragTarget = null;
 
-    // ---------- Кнопка Продолжить ----------
     function updateSubmitButtonState() {
       passwordSubmit.classList.toggle('disabled', passwordInput.value.trim() === '');
     }
     passwordInput.addEventListener('input', updateSubmitButtonState);
 
-    // ---------- Шифрование ----------
+    // Шифрование
     async function deriveKey(login, password, salt = null) {
       if (!salt) salt = crypto.getRandomValues(new Uint8Array(16));
       const combined = login + ':' + password;
@@ -401,8 +391,8 @@
     }
 
     async function saveToStorage() {
-      if (!encryptionKey || !currentLogin) return;
-      const encrypted = await encryptData(treeData, currentLogin, passwordInput.value);
+      if (!encryptionKey || !currentLogin || !currentPassword) return;
+      const encrypted = await encryptData(treeData, currentLogin, currentPassword);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(encrypted));
     }
 
@@ -412,7 +402,7 @@
       return await decryptData(JSON.parse(raw), login, password);
     }
 
-    // ---------- Вход ----------
+    // Вход
     async function checkStorageAndPrompt() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -441,6 +431,7 @@
           treeData = { persons: [], relationships: [] };
         }
         currentLogin = login;
+        currentPassword = pass;   // сохраняем пароль
         passwordSet = true;
         encryptionKey = true;
         passwordOverlay.style.display = 'none';
@@ -454,6 +445,7 @@
       passwordSet = false;
       encryptionKey = false;
       currentLogin = '';
+      currentPassword = '';
       treeData = { persons: [], relationships: [] };
       passwordOverlay.style.display = 'flex';
       passTitle.textContent = 'Вход в семейное древо';
@@ -464,7 +456,7 @@
       closeEditModal();
     }
 
-    // ---------- Рендеринг дерева с портами ----------
+    // Рендеринг
     function renderAll() {
       if (!passwordSet) return;
       treeContainer.innerHTML = '';
@@ -535,13 +527,11 @@
 
       gMain = svgSelection.append('g');
 
-      // Точечный фон
       gMain.append('rect')
         .attr('width', 20000).attr('height', 20000)
         .attr('x', -10000).attr('y', -10000)
         .attr('fill', 'url(#dotPattern)');
 
-      // Рёбра
       const edgesLayer = gMain.append('g');
       subGraph.edges().forEach(e => {
         const points = subGraph.edge(e).points;
@@ -557,7 +547,6 @@
         }
       });
 
-      // Узлы с портами
       const nodesLayer = gMain.append('g');
       subGraph.nodes().forEach(nodeId => {
         const node = subGraph.node(nodeId);
@@ -566,7 +555,6 @@
           .attr('class', 'node-card')
           .attr('transform', `translate(${node.x - node.width/2}, ${node.y - node.height/2})`);
 
-        // Карточка
         card.append('rect')
           .attr('width', node.width)
           .attr('height', node.height)
@@ -592,53 +580,41 @@
           .attr('fill', '#7f8c8d').attr('font-size', '10px')
           .text(person.lastName || '');
 
-        // Клик по карточке открывает редактирование
         card.on('click', (event) => {
           event.stopPropagation();
           openEditModal(person.id);
         });
 
-        // Порты (верхний и нижний)
         const portUp = card.append('circle')
           .attr('cx', node.width/2).attr('cy', 0)
-          .attr('r', 8)
-          .attr('class', 'port')
-          .attr('data-person-id', person.id)
-          .attr('data-port', 'up');
+          .attr('r', 8).attr('class', 'port')
+          .attr('data-person-id', person.id).attr('data-port', 'up');
 
         const portDown = card.append('circle')
           .attr('cx', node.width/2).attr('cy', node.height)
-          .attr('r', 8)
-          .attr('class', 'port')
-          .attr('data-person-id', person.id)
-          .attr('data-port', 'down');
+          .attr('r', 8).attr('class', 'port')
+          .attr('data-person-id', person.id).attr('data-port', 'down');
 
-        // Drag на портах
         [portUp, portDown].forEach(port => {
           port.call(d3.drag()
             .on('start', function(event) {
               dragSource = d3.select(this).attr('data-person-id');
-              // Создаём временную линию
               gMain.append('line')
                 .attr('id', 'dragLine')
                 .attr('x1', +d3.select(this).attr('cx') + node.x - node.width/2)
                 .attr('y1', +d3.select(this).attr('cy') + node.y - node.height/2)
                 .attr('x2', +d3.select(this).attr('cx') + node.x - node.width/2)
                 .attr('y2', +d3.select(this).attr('cy') + node.y - node.height/2)
-                .attr('stroke', '#ff9f43')
-                .attr('stroke-width', 2)
+                .attr('stroke', '#ff9f43').attr('stroke-width', 2)
                 .attr('stroke-dasharray', '5,3');
             })
             .on('drag', function(event) {
               const line = gMain.select('#dragLine');
-              if (!line.empty()) {
-                line.attr('x2', event.x).attr('y2', event.y);
-              }
+              if (!line.empty()) line.attr('x2', event.x).attr('y2', event.y);
             })
             .on('end', function(event) {
               const line = gMain.select('#dragLine');
               if (!line.empty()) line.remove();
-              // Определяем целевой узел под курсором
               const targetElement = document.elementFromPoint(event.sourceEvent.clientX, event.sourceEvent.clientY);
               const targetPort = targetElement?.closest('.port');
               if (targetPort && dragSource && targetPort.getAttribute('data-person-id') !== dragSource) {
@@ -651,7 +627,6 @@
         });
       });
 
-      // Автоцентрирование
       if (subGraph.nodes().length > 0) {
         const bounds = subGraph.nodes().reduce((acc, id) => {
           const n = subGraph.node(id);
@@ -671,7 +646,6 @@
       }
     }
 
-    // ---------- Обход связей ----------
     function getAncestors(id) {
       const set = new Set(), stack = [id];
       while (stack.length) {
@@ -697,7 +671,6 @@
         .map(r => r.person1 === id ? r.person2 : r.person1);
     }
 
-    // ---------- Модальные окна ----------
     function openEditModal(personId = null) {
       if (personId) {
         const person = treeData.persons.find(p => p.id === personId);
@@ -773,7 +746,6 @@
       renderAll();
     }
 
-    // Диалог связи после drag-and-drop
     function showRelationDialog(sourceId, targetId) {
       const source = treeData.persons.find(p => p.id === sourceId);
       const target = treeData.persons.find(p => p.id === targetId);
@@ -822,7 +794,7 @@
       renderAll();
     }
 
-    // ---------- Обработчики кнопок ----------
+    // Обработчики
     document.getElementById('savePersonBtn').addEventListener('click', savePerson);
     document.getElementById('deletePersonBtn').addEventListener('click', deletePerson);
     document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
@@ -878,7 +850,6 @@
       loginInput.focus();
     });
 
-    // Старт
     checkStorageAndPrompt();
   })();
 </script>
